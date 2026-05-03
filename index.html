@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedBrief — Clinic OS Prototype</title>
+  <style>
+    :root{
+      --bg:#0b1220;--panel:#111a2e;--panel-2:#17233d;--panel-3:#0f172a;
+      --line:rgba(255,255,255,.08);--text:#e5edf8;--muted:#92a1ba;
+      --blue:#4f8cff;--blue-2:#2563eb;--green:#10b981;--amber:#f59e0b;
+      --red:#ef4444;--purple:#8b5cf6;--cyan:#06b6d4;
+      --shadow:0 18px 60px rgba(0,0,0,.35);--radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#09101c,#0b1220 30%,#0b1220);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+    button,input,select,textarea{font:inherit}
+    .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+    .sidebar{position:sticky;top:0;height:100vh;padding:22px 18px;border-right:1px solid var(--line);background:rgba(8,14,26,.84);backdrop-filter:blur(16px);overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:18px}
+    .brand-logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--green));display:grid;place-items:center;font-weight:800;color:#fff;font-size:18px}
+    .brand h1{font-size:20px;line-height:1;margin:0}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
+    .nav{display:flex;flex-direction:column;gap:6px}
+    .nav-btn{width:100%;display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;background:transparent;border:1px solid transparent;color:var(--text);cursor:pointer;text-align:left;font-size:15px}
+    .nav-btn:hover{background:rgba(255,255,255,.04);border-color:var(--line)}
+    .nav-btn.active{background:rgba(79,140,255,.12);border-color:rgba(79,140,255,.3)}
+    .nav-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:16px;flex-shrink:0}
+    .sidebar-card{margin-top:18px;background:linear-gradient(180deg,rgba(79,140,255,.1),rgba(16,185,129,.06));border:1px solid rgba(79,140,255,.18);border-radius:16px;padding:16px}
+    .sidebar-card h3{margin:0 0 8px;font-size:14px}
+    .sidebar-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
+    .edge-stat{margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.05);font-size:12px;color:var(--muted);line-height:1.5}
+    .main{padding:26px;overflow-x:hidden}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}
+    .title-wrap h2{margin:0;font-size:28px;letter-spacing:-.03em}
+    .title-wrap p{margin:6px 0 0;color:var(--muted);font-size:14px}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);padding:11px 16px;border-radius:12px;cursor:pointer;font-size:14px}
+    .btn:hover{background:rgba(255,255,255,.07)}
+    .btn.primary{background:linear-gradient(135deg,var(--blue),var(--blue-2));border:none;color:#fff}
+    .btn.green{background:linear-gradient(135deg,var(--green),#059669);border:none;color:#fff}
+    .btn.amber{background:linear-gradient(135deg,var(--amber),#d97706);border:none;color:#fff}
+    .btn.small{padding:7px 12px;font-size:13px;border-radius:10px}
+    .grid{display:grid;gap:18px}
+    .grid.cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.018));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .stat-card{padding:18px}
+    .stat-top{display:flex;justify-content:space-between;align-items:center}
+    .stat-label{font-size:13px;color:var(--muted)}
+    .stat-icon{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.05);display:grid;place-items:center;font-size:18px}
+    .stat-value{margin-top:14px;font-size:32px;font-weight:800;letter-spacing:-.04em}
+    .stat-foot{margin-top:6px;color:var(--muted);font-size:12px}
+    .layout-2{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-top:18px}
+    .panel{padding:18px}
+    .section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+    .section-head h3{margin:0;font-size:17px}
+    .section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}
+    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);padding:7px 12px;border-radius:999px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.03)}
+    .dot{width:7px;height:7px;border-radius:999px;background:var(--green)}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .queue-item{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);display:grid;grid-template-columns:1fr auto;gap:14px;padding:14px;align-items:start}
+    .queue-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .tag{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:12px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)}
+    .tag.blue{background:rgba(79,140,255,.12);color:#bdd4ff;border-color:rgba(79,140,255,.2)}
+    .tag.green{background:rgba(16,185,129,.12);color:#b7f2de;border-color:rgba(16,185,129,.2)}
+    .tag.amber{background:rgba(245,158,11,.12);color:#ffe1a5;border-color:rgba(245,158,11,.2)}
+    .tag.red{background:rgba(239,68,68,.12);color:#ffc4c4;border-color:rgba(239,68,68,.2)}
+    .progress{width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;display:flex}
+    .revenue-bars{display:flex;flex-direction:column;gap:12px}
+    .bar-row{display:grid;grid-template-columns:130px 1fr 80px;gap:12px;align-items:center}
+    .bar-label{font-size:13px;color:var(--muted)}
+    .bar{height:10px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden}
+    .bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--amber),var(--red))}
+    .bar-value{text-align:right;font-size:13px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .field,.select,.textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;outline:none;font-size:14px}
+    .field:focus,.select:focus,.textarea:focus{border-color:var(--blue)}
+    .textarea{min-height:100px;resize:vertical}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .page{display:none}
+    .page.active{display:block}
+    .patients-layout{display:grid;grid-template-columns:340px 1fr;gap:18px}
+    .patient-list{display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 280px);overflow-y:auto;padding-right:4px}
+    .patient-row{padding:14px;cursor:pointer;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}
+    .patient-row.active{outline:2px solid rgba(79,140,255,.4);background:rgba(79,140,255,.08)}
+    .patient-row h4{margin:0 0 5px;font-size:15px}
+    .patient-row p{margin:0;color:var(--muted);font-size:13px}
+    .patient-top{display:flex;justify-content:space-between;gap:10px}
+    .patient-header{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:16px}
+    .avatar{width:58px;height:58px;border-radius:16px;background:linear-gradient(135deg,var(--blue),var(--purple));display:grid;place-items:center;font-weight:800;font-size:18px;flex-shrink:0}
+    .risk-box{min-width:200px;padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+    .risk-score{font-size:32px;font-weight:800}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+    .tab-btn{padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;font-size:13px}
+    .tab-btn.active{background:rgba(79,140,255,.12);border-color:rgba(79,140,255,.25)}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+    .timeline{display:flex;flex-direction:column;gap:10px}
+    .tl-item{padding:14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}
+    .tl-item h4{margin:0 0 5px;font-size:14px}
+    .tl-item p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+    .tl-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:5px}
+    .metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+    .mini{padding:14px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+    .mini .k{font-size:12px;color:var(--muted)}
+    .mini .v{font-size:20px;font-weight:800;margin-top:6px}
+    .wa-preview{border:1px solid rgba(16,185,129,.2);background:linear-gradient(180deg,rgba(16,185,129,.07),rgba(16,185,129,.02));border-radius:16px;padding:16px;margin-top:12px}
+    .wa-bubble{margin-top:10px;background:#0d2c20;border:1px solid rgba(255,255,255,.06);padding:14px;border-radius:14px;font-size:14px;line-height:1.7}
+    .broadcast-grid{display:grid;grid-template-columns:1fr .95fr;gap:18px}
+    .template-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .template{padding:13px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer}
+    .template:hover{background:rgba(255,255,255,.05)}
+    .template.active{background:rgba(79,140,255,.08);border-color:rgba(79,140,255,.25)}
+    .template strong{font-size:13px}
+    .template p{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+    .empty{padding:28px;border-radius:16px;border:1px dashed var(--line);text-align:center;color:var(--muted);font-size:14px}
+    .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+    .modal{width:min(860px,100%);max-height:90vh;overflow-y:auto;border-radius:22px;border:1px solid var(--line);background:linear-gradient(180deg,#10192c,#0d1526);box-shadow:var(--shadow)}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px;border-bottom:1px solid var(--line)}
+    .modal-body{padding:20px}
+    .close{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;cursor:pointer;font-size:16px}
+    .notice{margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.18);color:#c8f4ff;font-size:13px}
+    .lbl{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;margin-top:14px}
+    .lbl:first-child{margin-top:0}
+    .hidden{display:none!important}
+    .log-row{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);padding:14px}
+    .cohort-row{border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);padding:16px}
+    .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .legend .item{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+    .legend .sw{width:10px;height:10px;border-radius:999px}
+    @media(max-width:1200px){.grid.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.layout-2,.patients-layout,.broadcast-grid,.settings-grid{grid-template-columns:1fr}}
+    @media(max-width:860px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.metric-row,.three-col,.two-col,.template-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">M</div>
+      <div><h1>MedBrief</h1><p>Clinic OS — Prototype</p></div>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" data-page="dashboard"><span class="nav-ico">📊</span>Dashboard</button>
+      <button class="nav-btn" data-page="patients"><span class="nav-ico">🧑‍⚕️</span>Patients</button>
+      <button class="nav-btn" data-page="cohorts"><span class="nav-ico">🩺</span>Cohorts</button>
+      <button class="nav-btn" data-page="broadcasts"><span class="nav-ico">📣</span>Broadcasts</button>
+      <button class="nav-btn" data-page="referrals"><span class="nav-ico">📄</span>Referrals</button>
+      <button class="nav-btn" data-page="settings"><span class="nav-ico">⚙️</span>Settings</button>
+    </nav>
+    <div class="sidebar-card">
+      <h3>📊 Clinic intelligence</h3>
+      <p>Real-time retention, revenue risk, and cohort gaps.</p>
+      <div class="edge-stat" id="edgeStat">Loading…</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h2 id="pageTitle">Dashboard</h2>
+        <p id="pageSub">Retention risk, revenue at risk, and the recall queue.</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="resetBtn">Reset Demo</button>
+        <button class="btn" id="exportBtn">Export JSON</button>
+        <button class="btn primary" id="openAddPatient">+ Add Patient</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dashboard">
+      <div class="grid cards" id="statCards"></div>
+      <div class="layout-2">
+        <div class="card panel">
+          <div class="section-head"><div><h3>Recall queue</h3><p>Highest-value patients to bring back first.</p></div><span class="pill"><span class="dot"></span><span id="queueCount">0</span></span></div>
+          <div class="list" id="recallQueue"></div>
+        </div>
+        <div class="card panel">
+          <div class="section-head"><div><h3>Cohort health</h3><p>Retention breakdown by condition.</p></div></div>
+          <div id="cohortHealth"></div>
+          <div class="legend">
+            <div class="item"><span class="sw" style="background:var(--green)"></span>On track</div>
+            <div class="item"><span class="sw" style="background:var(--amber)"></span>Due soon</div>
+            <div class="item"><span class="sw" style="background:var(--red)"></span>Overdue</div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-2">
+        <div class="card panel">
+          <div class="section-head"><div><h3>Revenue at risk</h3><p>Lost follow-up income by cohort.</p></div></div>
+          <div class="revenue-bars" id="revBars"></div>
+        </div>
+        <div class="card panel">
+          <div class="section-head"><div><h3>Care gaps</h3><p>Clinical and retention alerts.</p></div></div>
+          <div class="list" id="careGaps"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PATIENTS -->
+    <section class="page" id="page-patients">
+      <div class="patients-layout">
+        <div class="card panel">
+          <div class="section-head"><div><h3>Patient directory</h3></div><button class="btn small primary" id="openAddPatient2">+ Add</button></div>
+          <div class="toolbar">
+            <input class="field" id="searchInput" placeholder="Search name, phone, condition…" style="margin:0" />
+            <select class="select" id="condFilter" style="width:180px;margin:0">
+              <option value="all">All conditions</option>
+              <option>Diabetes</option><option>Hypertension</option><option>Thyroid</option>
+              <option>Asthma</option><option>CKD</option><option>Cardiac</option><option>General</option>
+            </select>
+          </div>
+          <div class="patient-list" id="patientList"></div>
+        </div>
+        <div class="card panel" id="patientDetail"><div class="empty">Select a patient to view their full record.</div></div>
+      </div>
+    </section>
+
+    <!-- COHORTS -->
+    <section class="page" id="page-cohorts">
+      <div class="card panel">
+        <div class="section-head">
+          <div><h3>Chronic cohort engine</h3><p>Find which groups are slipping and recall them instantly.</p></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <select class="select" id="cohortWindow" style="width:220px">
+              <option value="30">Inactive for 30+ days</option>
+              <option value="60">Inactive for 60+ days</option>
+              <option value="90">Inactive for 90+ days</option>
+            </select>
+            <button class="btn green" id="broadcastCohortBtn">Broadcast to selected cohort</button>
+          </div>
+        </div>
+        <div class="list" id="cohortRows"></div>
+      </div>
+    </section>
+
+    <!-- BROADCASTS -->
+    <section class="page" id="page-broadcasts">
+      <div class="broadcast-grid">
+        <div class="card panel">
+          <div class="section-head"><div><h3>Broadcast builder</h3><p>Segment, compose, and simulate outreach.</p></div></div>
+          <div class="two-col">
+            <div>
+              <label class="lbl">Audience</label>
+              <select class="select" id="bcAudience">
+                <option>All Patients</option><option>Diabetes</option><option>Hypertension</option>
+                <option>Thyroid</option><option>Asthma</option><option>CKD</option><option>Cardiac</option>
+                <option>Overdue Follow-ups</option><option>High Risk</option>
+              </select>
+            </div>
+            <div>
+              <label class="lbl">Objective</label>
+              <select class="select" id="bcObjective">
+                <option>Follow-up recall</option><option>Health camp</option>
+                <option>Vaccination drive</option><option>Test reminder</option><option>New service</option>
+              </select>
+            </div>
+          </div>
+          <label class="lbl">Templates</label>
+          <div class="template-grid" id="templateGrid"></div>
+          <label class="lbl">Message</label>
+          <textarea class="textarea" id="bcMessage"></textarea>
+          <div class="notice" id="bcNotice" style="margin-top:10px"></div>
+          <div class="toolbar" style="margin-top:12px">
+            <button class="btn primary" id="sendBcBtn">Simulate Broadcast</button>
+            <button class="btn" id="recallTemplateBtn">Recall template</button>
+          </div>
+        </div>
+        <div class="card panel">
+          <div class="section-head"><div><h3>WhatsApp preview</h3></div></div>
+          <div class="wa-preview"><div style="font-size:12px;color:#b7f2de">Clinic-branded message</div><div class="wa-bubble" id="bcPreview"></div></div>
+          <div class="section-head" style="margin-top:20px"><div><h3>Campaign log</h3></div></div>
+          <div class="list" id="bcLogs"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REFERRALS -->
+    <section class="page" id="page-referrals">
+      <div class="card panel">
+        <div class="section-head"><div><h3>Referral summary generator</h3><p>One-page structured specialist handoff. No paper folder.</p></div></div>
+        <div class="two-col">
+          <div><label class="lbl">Patient</label><select class="select" id="refPatient"></select></div>
+          <div><label class="lbl">Specialist</label><input class="field" id="refSpecialist" placeholder="Dr. Name — Specialty" /></div>
+        </div>
+        <div class="two-col">
+          <div><label class="lbl">Reason</label><input class="field" id="refReason" placeholder="Reason for referral" /></div>
+          <div><label class="lbl">Urgency</label><select class="select" id="refUrgency"><option>Routine</option><option>Soon</option><option>Urgent</option></select></div>
+        </div>
+        <label class="lbl">Note for specialist</label>
+        <textarea class="textarea" id="refNote" placeholder="Key history, trends, and questions for the specialist."></textarea>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn primary" id="genRefBtn">Generate Referral</button>
+          <button class="btn" id="printRefBtn">Print / Open</button>
+        </div>
+        <div class="wa-preview" id="refPreviewWrap">
+          <div style="font-size:12px;color:#bdd4ff">Generated referral summary</div>
+          <div id="refPreview" style="margin-top:10px;line-height:1.7"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="page" id="page-settings">
+      <div class="settings-grid">
+        <div class="card panel">
+          <div class="section-head"><div><h3>Clinic settings</h3><p>Used in branding and revenue calculations.</p></div></div>
+          <div class="two-col">
+            <div><label class="lbl">Clinic name</label><input class="field" id="sClinic" /></div>
+            <div><label class="lbl">Doctor name</label><input class="field" id="sDoctor" /></div>
+          </div>
+          <div class="two-col">
+            <div><label class="lbl">WhatsApp number</label><input class="field" id="sWA" /></div>
+            <div><label class="lbl">Avg consultation fee (₹)</label><input class="field" id="sFee" type="number" /></div>
+          </div>
+          <label class="lbl">Tagline</label><input class="field" id="sTagline" />
+          <div class="toolbar" style="margin-top:16px"><button class="btn primary" id="saveSettingsBtn">Save settings</button></div>
+        </div>
+        <div class="card panel">
+          <div class="section-head"><div><h3>Prototype tools</h3></div></div>
+          <div class="list">
+            <div class="queue-item"><div><strong>Reset demo data</strong><div style="font-size:12px;color:var(--muted);margin-top:4px">Restore the seeded clinic and patients.</div></div><button class="btn small" id="resetBtn2">Reset</button></div>
+            <div class="queue-item"><div><strong>Export data</strong><div style="font-size:12px;color:var(--muted);margin-top:4px">Download full clinic JSON.</div></div><button class="btn small" id="exportBtn2">Export</button></div>
+            <div class="queue-item"><div><strong>Import data</strong><div style="font-size:12px;color:var(--muted);margin-top:4px">Load a previously exported JSON file.</div></div><label class="btn small" style="cursor:pointer">Import<input type="file" id="importInput" accept=".json" class="hidden" /></label></div>
+          </div>
+          <div class="notice" style="margin-top:14px">Data stored in browser localStorage. No server required.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ADD PATIENT MODAL -->
+<div class="modal-backdrop" id="patientModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h3 style="margin:0">Add patient</h3><p style="margin:5px 0 0;color:var(--muted);font-size:13px">Create a new patient file with first visit and follow-up.</p></div>
+      <button class="close" id="closeModal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="three-col">
+        <div><label class="lbl">Full name *</label><input class="field" id="nName" /></div>
+        <div><label class="lbl">Phone *</label><input class="field" id="nPhone" /></div>
+        <div><label class="lbl">Age</label><input class="field" id="nAge" type="number" /></div>
+      </div>
+      <div class="three-col">
+        <div><label class="lbl">Gender</label><select class="select" id="nGender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+        <div><label class="lbl">Condition</label><select class="select" id="nCondition"><option>General</option><option>Diabetes</option><option>Hypertension</option><option>Thyroid</option><option>Asthma</option><option>CKD</option><option>Cardiac</option></select></div>
+        <div><label class="lbl">Consultation fee (₹)</label><input class="field" id="nFee" type="number" /></div>
+      </div>
+      <div class="two-col">
+        <div><label class="lbl">Last visit</label><input class="field" id="nLastVisit" type="date" /></div>
+        <div><label class="lbl">Next follow-up</label><input class="field" id="nFollowUp" type="date" /></div>
+      </div>
+      <label class="lbl">Notes / prescription</label>
+      <textarea class="textarea" id="nNotes" placeholder="Metformin 500mg BD. Repeat HbA1c in 90 days."></textarea>
+      <div class="two-col">
+        <div><label class="lbl">Report name</label><input class="field" id="nReport" placeholder="HbA1c, CBC, TSH…" /></div>
+        <div><label class="lbl">Report status</label><select class="select" id="nReportStatus"><option>Uploaded</option><option>Pending from lab</option><option>Shared to patient</option></select></div>
+      </div>
+      <div class="toolbar" style="margin-top:18px"><button class="btn primary" id="savePatientBtn">Create patient</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const KEY='mbp-v2';
+  const $=s=>document.querySelector(s);
+  const $$=s=>Array.from(document.querySelectorAll(s));
+  const safe=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const uid=()=>Math.random().toString(36).slice(2,10);
+  const todayISO=()=>new Date().toISOString().slice(0,10);
+  const offsetISO=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);};
+  const fmt=d=>{const x=new Date(d);return isNaN(x)?'—':x.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});};
+  const daysSince=d=>Math.floor((Date.now()-new Date(d))/(864e5));
+  const daysUntil=d=>Math.floor((new Date(d)-Date.now())/(864e5));
+  const money=n=>`₹${Number(n||0).toLocaleString('en-IN')}`;
+
+  function seed(){
+    return {
+      clinic:{name:'City Health Clinic',doctorName:'Dr. A. Sharma',whatsapp:'+91 98765 00000',avgFee:600,tagline:'Independent care. Digital follow-up.'},
+      broadcasts:[],
+      patients:[
+        {id:uid(),name:'Ramesh Patil',phone:'+91 98220 11111',age:58,gender:'Male',condition:'Diabetes',consultFee:700,lastVisit:offsetISO(-96),nextFollowUp:offsetISO(-6),notes:'HbA1c 8.3%. Metformin 500mg BD. Counsel on diet.',reports:[{id:uid(),name:'HbA1c Report',status:'Shared to patient',date:offsetISO(-96)}],visits:[{id:uid(),date:offsetISO(-96),type:'Visit',summary:'Diabetes review. HbA1c 8.3%. Follow-up in 90 days.'},{id:uid(),date:offsetISO(-96),type:'Prescription',summary:'Metformin 500mg BD, lifestyle counselling.'},{id:uid(),date:offsetISO(-95),type:'Report',summary:'HbA1c shared to patient on WhatsApp.'}],referral:null},
+        {id:uid(),name:'Sunita Joshi',phone:'+91 97655 22222',age:47,gender:'Female',condition:'Hypertension',consultFee:600,lastVisit:offsetISO(-42),nextFollowUp:offsetISO(-3),notes:'BP 156/96. Amlodipine continued. Salt restriction advised.',reports:[{id:uid(),name:'BP Log Sheet',status:'Uploaded',date:offsetISO(-42)}],visits:[{id:uid(),date:offsetISO(-42),type:'Visit',summary:'Hypertension follow-up. BP 156/96.'},{id:uid(),date:offsetISO(-42),type:'Prescription',summary:'Amlodipine continued, home BP log advised.'}],referral:null},
+        {id:uid(),name:'Aarti Kulkarni',phone:'+91 99887 33333',age:34,gender:'Female',condition:'Thyroid',consultFee:500,lastVisit:offsetISO(-18),nextFollowUp:offsetISO(12),notes:'TSH within range. Stable on current dose.',reports:[{id:uid(),name:'TSH Lab Result',status:'Shared to patient',date:offsetISO(-18)}],visits:[{id:uid(),date:offsetISO(-18),type:'Visit',summary:'Thyroid review. TSH stable.'},{id:uid(),date:offsetISO(-17),type:'Report',summary:'TSH result sent to patient.'}],referral:null},
+        {id:uid(),name:'Imran Shaikh',phone:'+91 90110 44444',age:63,gender:'Male',condition:'Cardiac',consultFee:900,lastVisit:offsetISO(-61),nextFollowUp:offsetISO(-14),notes:'Intermittent chest discomfort. Consider cardiology referral.',reports:[{id:uid(),name:'ECG Scan',status:'Uploaded',date:offsetISO(-61)}],visits:[{id:uid(),date:offsetISO(-61),type:'Visit',summary:'Cardiac review. Symptom recurrence.'},{id:uid(),date:offsetISO(-60),type:'Report',summary:'ECG uploaded.'}],referral:{specialist:'Dr. V. Rao — Cardiologist',reason:'Recurrent chest discomfort',urgency:'Soon',date:offsetISO(-60)}},
+        {id:uid(),name:'Meena Deshpande',phone:'+91 98902 55555',age:51,gender:'Female',condition:'CKD',consultFee:800,lastVisit:offsetISO(-74),nextFollowUp:offsetISO(-9),notes:'Creatinine rising. Nephrology referral advised.',reports:[{id:uid(),name:'Kidney Function Test',status:'Pending from lab',date:offsetISO(-74)}],visits:[{id:uid(),date:offsetISO(-74),type:'Visit',summary:'CKD monitoring. Ordered repeat RFT.'}],referral:null},
+        {id:uid(),name:'Rahul More',phone:'+91 93267 66666',age:29,gender:'Male',condition:'Asthma',consultFee:500,lastVisit:offsetISO(-11),nextFollowUp:offsetISO(19),notes:'Inhaler technique reviewed. Stable.',reports:[],visits:[{id:uid(),date:offsetISO(-11),type:'Visit',summary:'Asthma stable. No night symptoms.'}],referral:null}
+      ]
+    };
+  }
+
+  const TEMPLATES=[
+    {title:'Recall reminder',body:'Hello {{name}}, this is {{clinic}}. Your follow-up review is due. Please reply or call us to book your visit this week.'},
+    {title:'Lab test reminder',body:'Hello {{name}}, {{doctor}} has advised your pending tests. Please complete them before your next review at {{clinic}}.'},
+    {title:'Health camp invite',body:'Hello {{name}}, {{clinic}} is running a focused care camp this week. Reply to confirm a slot.'},
+    {title:'Adherence nudge',body:'Hello {{name}}, regular medicines and timely follow-up prevent complications. Contact {{clinic}} if you need a review.'}
+  ];
+
+  let S=load(),selPat=S.patients[0]?.id||null,patTab='overview',selTemplate=0,selCohort=null;
+
+  function load(){const r=localStorage.getItem(KEY);if(!r){const s=seed();localStorage.setItem(KEY,JSON.stringify(s));return s;}try{return JSON.parse(r);}catch{const s=seed();localStorage.setItem(KEY,JSON.stringify(s));return s;}}
+  function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+
+  const isOverdue=p=>daysUntil(p.nextFollowUp)<0;
+  const isSoon=p=>{const d=daysUntil(p.nextFollowUp);return d>=0&&d<=7;};
+  const overdueBy=p=>Math.abs(daysUntil(p.nextFollowUp));
+  const missedRev=p=>isOverdue(p)?(p.consultFee||S.clinic.avgFee||0):0;
+  function risk(p){
+    let s=18;
+    const last=daysSince(p.lastVisit);
+    if(last>90)s+=26;else if(last>60)s+=18;else if(last>30)s+=10;
+    const over=overdueBy(p);
+    if(isOverdue(p)){if(over>21)s+=24;else if(over>7)s+=16;else s+=8;}
+    if(['Diabetes','Hypertension','CKD','Cardiac'].includes(p.condition))s+=18;
+    if((p.reports||[]).some(r=>r.status==='Pending from lab'))s+=10;
+    if((p.notes||'').toLowerCase().includes('rising'))s+=8;
+    return Math.min(100,s);
+  }
+  function riskLabel(s){return s>=70?['High risk','red']:s>=45?['Moderate','amber']:['Stable','green'];}
+  const initials=n=>n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
+  const fillTpl=(t,p)=>t.replaceAll('{{name}}',p?.name||'Patient').replaceAll('{{clinic}}',S.clinic.name).replaceAll('{{doctor}}',S.clinic.doctorName);
+  function byCondition(){return S.patients.reduce((a,p)=>{(a[p.condition]||=[]).push(p);return a;},{});}
+  function timeline(p){const t=[...(p.visits||[])];if(p.referral)t.push({id:'ref',date:p.referral.date,type:'Referral',summary:`Referred to ${p.referral.specialist} — ${p.referral.reason}. Urgency: ${p.referral.urgency}.`});return t.sort((a,b)=>new Date(b.date)-new Date(a.date));}
+
+  function navigate(page){
+    $$('.page').forEach(x=>x.classList.remove('active'));
+    $$('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));
+    $(`#page-${page}`).classList.add('active');
+    const T={dashboard:['Dashboard','Retention risk, revenue at risk, and the recall queue.'],patients:['Patients','Full timeline, reports, follow-ups, and WhatsApp previews.'],cohorts:['Cohorts','Track inactivity by disease cluster.'],broadcasts:['Broadcasts','Targeted outreach without manual blasting.'],referrals:['Referrals','One-page specialist summaries.'],settings:['Settings','Clinic branding and prototype controls.']};
+    $('#pageTitle').textContent=T[page][0];
+    $('#pageSub').textContent=T[page][1];
+  }
+
+  function renderDashboard(){
+    const ov=S.patients.filter(isOverdue);
+    const lost=ov.reduce((a,p)=>a+missedRev(p),0);
+    const hiRisk=S.patients.filter(p=>risk(p)>=70).length;
+    const soon=S.patients.filter(isSoon).length;
+    $('#statCards').innerHTML=[{l:'Total patients',v:S.patients.length,i:'👥',f:'Active files'},{l:'Overdue follow-ups',v:ov.length,i:'⏰',f:'Should already be back'},{l:'Revenue at risk',v:money(lost),i:'💸',f:'Missed follow-up fees'},{l:'High-risk returns',v:hiRisk+soon,i:'🧠',f:'Priority recall queue'}].map(c=>`<div class="card stat-card"><div class="stat-top"><div class="stat-label">${safe(c.l)}</div><div class="stat-icon">${c.i}</div></div><div class="stat-value">${safe(String(c.v))}</div><div class="stat-foot">${safe(c.f)}</div></div>`).join('');
+
+    const queue=S.patients.map(p=>({...p,_risk:risk(p),_lost:missedRev(p)})).filter(p=>p._risk>=45||isOverdue(p)).sort((a,b)=>(b._lost+b._risk)-(a._lost+a._risk)).slice(0,6);
+    $('#queueCount').textContent=queue.length;
+    $('#recallQueue').innerHTML=queue.length?queue.map(p=>{const[lbl,cls]=riskLabel(p._risk);return`<div class="queue-item"><div><strong>${safe(p.name)}</strong><div class="queue-meta"><span class="tag">${safe(p.condition)}</span><span class="tag ${cls}">${lbl}</span><span class="tag">${isOverdue(p)?`${overdueBy(p)}d overdue`:'Due soon'}</span></div></div><div style="text-align:right"><div style="font-size:12px;color:var(--muted)">At risk</div><div style="font-size:20px;font-weight:800">${money(p._lost||p.consultFee)}</div><button class="btn small" onclick="window._MB.open('${p.id}')">Open</button></div></div>`}).join(''):`<div class="empty">No active recall items.</div>`;
+
+    const gc=byCondition();
+    $('#cohortHealth').innerHTML=Object.keys(gc).map(c=>{const pts=gc[c];const h=pts.filter(p=>!isOverdue(p)&&!isSoon(p)).length;const s2=pts.filter(isSoon).length;const o=pts.filter(isOverdue).length;const t=pts.length||1;return`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:14px">${safe(c)}</span><span style="font-size:12px;color:var(--muted)">${pts.length} pts • ${o} overdue</span></div><div class="progress"><span style="width:${h/t*100}%;background:var(--green)"></span><span style="width:${s2/t*100}%;background:var(--amber)"></span><span style="width:${o/t*100}%;background:var(--red)"></span></div></div>`;}).join('');
+
+    const rv=Object.entries(gc).map(([c,pts])=>({c,v:pts.reduce((a,p)=>a+missedRev(p),0)})).sort((a,b)=>b.v-a.v);
+    const mx=Math.max(...rv.map(r=>r.v),1);
+    $('#revBars').innerHTML=rv.map(r=>`<div class="bar-row"><div class="bar-label">${safe(r.c)}</div><div class="bar"><span style="width:${r.v/mx*100}%"></span></div><div class="bar-value">${money(r.v)}</div></div>`).join('');
+
+    const gaps=[];
+    S.patients.forEach(p=>{
+      if(isOverdue(p))gaps.push({l:'Retention gap',cls:'red',p:p.name,t:`${p.name} missed follow-up`,n:`Overdue ${overdueBy(p)} days. ${money(missedRev(p))} at risk.`});
+      if((p.reports||[]).some(r=>r.status==='Pending from lab'))gaps.push({l:'Pending report',cls:'amber',p:p.name,t:`${p.name} — unresolved test`,n:'Lab report pending. Blocks proper review.'});
+      if(risk(p)>=70&&!isOverdue(p))gaps.push({l:'Clinical risk',cls:'red',p:p.name,t:`${p.name} — high risk score`,n:'Chronic condition with delayed history. Proactive outreach advised.'});
+    });
+    $('#careGaps').innerHTML=gaps.slice(0,8).length?gaps.slice(0,8).map(g=>`<div class="queue-item"><div><strong>${safe(g.t)}</strong><div class="queue-meta"><span class="tag ${g.cls}">${safe(g.l)}</span><span class="tag">${safe(g.p)}</span></div></div><div style="max-width:240px;font-size:13px;color:var(--muted)">${safe(g.n)}</div></div>`).join(''):`<div class="empty">No critical gaps.</div>`;
+
+    const overdueTot=S.patients.filter(isOverdue).length;
+    const hrTot=S.patients.filter(p=>risk(p)>=70).length;
+    const lostTot=S.patients.reduce((a,p)=>a+missedRev(p),0);
+    $('#edgeStat').textContent=`${overdueTot} overdue • ${hrTot} high-risk • ${money(lostTot)} at risk`;
+  }
+
+  function renderPatients(){
+    const q=($('#searchInput').value||'').toLowerCase();
+    const f=$('#condFilter').value;
+    const list=S.patients.filter(p=>{const hay=`${p.name} ${p.phone} ${p.condition}`.toLowerCase();return(!q||hay.includes(q))&&(f==='all'||p.condition===f);}).sort((a,b)=>new Date(b.lastVisit)-new Date(a.lastVisit));
+    $('#patientList').innerHTML=list.length?list.map(p=>{const[lbl,cls]=riskLabel(risk(p));return`<div class="patient-row${selPat===p.id?' active':''}" data-id="${p.id}"><div class="patient-top"><div><h4>${safe(p.name)}</h4><p>${safe(p.condition)} • ${safe(String(p.age))} • ${safe(p.phone)}</p></div><span class="tag ${cls}">${lbl}</span></div><div class="queue-meta"><span class="tag">${isOverdue(p)?`${overdueBy(p)}d overdue`:`Next ${fmt(p.nextFollowUp)}`}</span><span class="tag">${money(p.consultFee||S.clinic.avgFee)}</span></div></div>`;}).join(''):`<div class="empty">No patients match.</div>`;
+    $$('.patient-row').forEach(r=>r.addEventListener('click',()=>{selPat=r.dataset.id;patTab='overview';renderPatients();}));
+    renderPatientDetail();
+  }
+
+  function renderPatientDetail(){
+    const p=S.patients.find(x=>x.id===selPat);
+    if(!p){$('#patientDetail').innerHTML='<div class="empty">Select a patient to continue.</div>';return;}
+    const r=risk(p);const[lbl,cls]=riskLabel(r);
+    const tl=timeline(p);
+    const tabs=['overview','timeline','reports','followup','whatsapp','referral'];
+    const latestRep=(p.reports||[]).slice(-1)[0];
+    $('#patientDetail').innerHTML=`
+      <div class="patient-header">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div class="avatar">${initials(p.name)}</div>
+          <div>
+            <div style="font-size:24px;font-weight:800;letter-spacing:-.03em">${safe(p.name)}</div>
+            <div style="color:var(--muted);font-size:13px;margin-top:4px">${safe(p.gender)} • ${safe(String(p.age))} • ${safe(p.phone)} • ${safe(p.condition)}</div>
+            <div class="queue-meta" style="margin-top:10px"><span class="tag ${cls}">${lbl}</span><span class="tag">${isOverdue(p)?`${overdueBy(p)} days overdue`:`Due ${fmt(p.nextFollowUp)}`}</span><span class="tag">${money(missedRev(p))} at risk</span></div>
+          </div>
+        </div>
+        <div class="risk-box"><div style="font-size:12px;color:var(--muted)">Return-risk score</div><div class="risk-score">${r}</div><div style="font-size:11px;color:var(--muted);margin-top:4px">Combines inactivity, condition severity, follow-up delay, pending reports.</div></div>
+      </div>
+      <div class="metric-row">
+        <div class="mini"><div class="k">Last visit</div><div class="v">${fmt(p.lastVisit)}</div></div>
+        <div class="mini"><div class="k">Next follow-up</div><div class="v">${fmt(p.nextFollowUp)}</div></div>
+        <div class="mini"><div class="k">At risk</div><div class="v">${money(missedRev(p))}</div></div>
+        <div class="mini"><div class="k">Reports</div><div class="v">${(p.reports||[]).length}</div></div>
+      </div>
+      <div class="tabs">${tabs.map(t=>`<button class="tab-btn${patTab===t?' active':''}" data-tab="${t}">${{overview:'Overview',timeline:'Timeline',reports:'Reports',followup:'Follow-up',whatsapp:'WhatsApp',referral:'Referral'}[t]}</button>`).join('')}</div>
+
+      <div class="tab-pane${patTab==='overview'?' active':''}" data-pane="overview">
+        <div class="tl-item"><h4>Clinical notes</h4><p>${safe(p.notes||'No notes.')}</p></div>
+        <div class="tl-item" style="margin-top:10px"><h4>Retention insight</h4><p>${buildInsight(p)}</p></div>
+      </div>
+
+      <div class="tab-pane${patTab==='timeline'?' active':''}" data-pane="timeline">
+        <div class="toolbar"><button class="btn small" id="addVisitBtn">+ Add visit note</button></div>
+        <div class="timeline">${tl.length?tl.map(t=>`<div class="tl-item"><div class="tl-head"><h4>${safe(t.type)}</h4><span class="tag">${fmt(t.date)}</span></div><p>${safe(t.summary)}</p></div>`).join(''):'<div class="empty">No entries.</div>'}</div>
+      </div>
+
+      <div class="tab-pane${patTab==='reports'?' active':''}" data-pane="reports">
+        <div class="toolbar"><button class="btn small" id="addReportBtn">+ Add report</button></div>
+        <div class="timeline">${(p.reports||[]).length?(p.reports.slice().reverse().map(r=>`<div class="tl-item"><div class="tl-head"><h4>${safe(r.name)}</h4><span class="tag">${fmt(r.date)}</span></div><p>Status: ${safe(r.status)}</p></div>`).join('')):'<div class="empty">No reports.</div>'}</div>
+      </div>
+
+      <div class="tab-pane${patTab==='followup'?' active':''}" data-pane="followup">
+        <div class="two-col">
+          <div><label class="lbl">Next follow-up date</label><input class="field" id="pfDate" type="date" value="${safe(p.nextFollowUp)}" /></div>
+          <div><label class="lbl">Custom message</label><input class="field" id="pfMsg" value="Hello ${safe(p.name)}, your review is due. Please call us to book." /></div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button class="btn primary" id="saveFollowBtn">Save reminder</button>
+          <button class="btn green" id="markDoneBtn">Mark completed today</button>
+        </div>
+        <div class="notice">${isOverdue(p)?`⚠️ Overdue by ${overdueBy(p)} days.`:`✅ Next review: ${fmt(p.nextFollowUp)}.`}</div>
+      </div>
+
+      <div class="tab-pane${patTab==='whatsapp'?' active':''}" data-pane="whatsapp">
+        <div class="wa-preview">
+          <div style="font-size:12px;color:#b7f2de">Branded WhatsApp delivery preview</div>
+          <div class="wa-bubble">
+            Hello ${safe(p.name)}, this is ${safe(S.clinic.name)}.<br><br>
+            Latest file: <strong>${safe(latestRep?.name||'Prescription update')}</strong><br>
+            Status: ${safe(latestRep?.status||'Ready')}<br><br>
+            Doctor: ${safe(S.clinic.doctorName)}<br>
+            Follow-up: ${fmt(p.nextFollowUp)}<br><br>
+            Reply here to book your next appointment.
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:12px"><button class="btn green" id="simSendBtn">✔ Simulate send</button></div>
+      </div>
+
+      <div class="tab-pane${patTab==='referral'?' active':''}" data-pane="referral">
+        <div class="tl-item">
+          <h4>Quick referral</h4>
+          <p>Generate a structured one-page handoff summary for a specialist using this patient’s file.</p>
+          <div class="toolbar" style="margin-top:10px"><button class="btn primary" id="quickRefBtn">Open referral builder for ${safe(p.name)}</button></div>
+          ${p.referral?`<div style="margin-top:12px" class="notice">✅ Existing referral: ${safe(p.referral.specialist)} (${safe(p.referral.urgency)}, ${fmt(p.referral.date)})</div>`:''}
+        </div>
+      </div>
+    `;
+    $$('.tab-btn','#patientDetail').forEach(b=>b.addEventListener('click',()=>{patTab=b.dataset.tab;renderPatientDetail();}));
+    const av=$('#addVisitBtn');if(av)av.onclick=()=>{const s=prompt('Visit summary');if(!s)return;(p.visits||=[]).push({id:uid(),date:todayISO(),type:'Visit',summary:s});saveRender();};
+    const ar=$('#addReportBtn');if(ar)ar.onclick=()=>{const n=prompt('Report name');if(!n)return;const st=prompt('Status','Uploaded')||'Uploaded';(p.reports||=[]).push({id:uid(),name:n,status:st,date:todayISO()});(p.visits||=[]).push({id:uid(),date:todayISO(),type:'Report',summary:`${n} added. Status: ${st}.`});saveRender();};
+    const sf=$('#saveFollowBtn');if(sf)sf.onclick=()=>{p.nextFollowUp=$('#pfDate').value||p.nextFollowUp;const m=$('#pfMsg').value;(p.visits||=[]).push({id:uid(),date:todayISO(),type:'Reminder',summary:`Reminder set: ${m}`});saveRender();alert('Follow-up saved.');};
+    const md=$('#markDoneBtn');if(md)md.onclick=()=>{p.lastVisit=todayISO();p.nextFollowUp=offsetISO(30);(p.visits||=[]).push({id:uid(),date:todayISO(),type:'Visit',summary:'Follow-up completed. Next review in 30 days.'});saveRender();};
+    const ss=$('#simSendBtn');if(ss)ss.onclick=()=>{(p.visits||=[]).push({id:uid(),date:todayISO(),type:'WhatsApp',summary:'Branded report message simulated to patient.'});saveRender();alert('WhatsApp delivery simulated.');};
+    const qr=$('#quickRefBtn');if(qr)qr.onclick=()=>{selPat=p.id;navigate('referrals');renderReferrals();$('#refPatient').value=p.id;$('#refReason').value=p.referral?.reason||`Specialist review for ${p.condition.toLowerCase()} management`;$('#refSpecialist').value=p.referral?.specialist||'';$('#refUrgency').value=p.referral?.urgency||'Routine';$('#refNote').value=p.notes||'';genRefPreview();};
+  }
+
+  function buildInsight(p){
+    const parts=[];
+    if(isOverdue(p))parts.push(`Follow-up missed by ${overdueBy(p)} days`);
+    if((p.reports||[]).some(r=>r.status==='Pending from lab'))parts.push('pending lab results still unresolved');
+    if(['Diabetes','Hypertension','CKD','Cardiac'].includes(p.condition))parts.push(`chronic ${p.condition.toLowerCase()} cohort requires tighter recall`);
+    parts.push(`estimated revenue at risk: ${money(missedRev(p))}`);
+    return parts.join('; ')+'.';
+  }
+
+  function renderCohorts(){
+    const win=Number($('#cohortWindow').value);
+    const gc=byCondition();
+    if(!selCohort&&Object.keys(gc)[0])selCohort=Object.keys(gc)[0];
+    $('#cohortRows').innerHTML=Object.entries(gc).map(([c,pts])=>{
+      const inactive=pts.filter(p=>daysSince(p.lastVisit)>=win);
+      const ov=pts.filter(isOverdue);
+      const avgR=Math.round(pts.reduce((a,p)=>a+risk(p),0)/pts.length);
+      const val=ov.reduce((a,p)=>a+missedRev(p),0);
+      return`<div class="cohort-row${selCohort===c?' active':''} ${selCohort===c?'style="outline:2px solid rgba(79,140,255,.4)"':''}">
+        <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap">
+          <div><div style="font-size:17px;font-weight:700">${safe(c)}</div><div class="queue-meta"><span class="tag">${pts.length} pts</span><span class="tag amber">${inactive.length} inactive ${win}+ days</span><span class="tag red">${ov.length} overdue</span><span class="tag blue">Avg risk ${avgR}</span></div></div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div style="text-align:right"><div style="font-size:12px;color:var(--muted)">At risk</div><div style="font-size:22px;font-weight:800">${money(val)}</div></div>
+            <button class="btn small${selCohort===c?' primary':''}" data-coh="${safe(c)}">Select</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    $$('[data-coh]').forEach(b=>b.onclick=()=>{selCohort=b.dataset.coh;renderCohorts();});
+  }
+
+  function bcAudiencePts(a){
+    if(a==='All Patients')return S.patients;
+    if(a==='Overdue Follow-ups')return S.patients.filter(isOverdue);
+    if(a==='High Risk')return S.patients.filter(p=>risk(p)>=70);
+    return S.patients.filter(p=>p.condition===a);
+  }
+
+  function renderBroadcasts(){
+    $('#templateGrid').innerHTML=TEMPLATES.map((t,i)=>`<div class="template${selTemplate===i?' active':''}" data-tpl="${i}"><strong>${safe(t.title)}</strong><p>${safe(fillTpl(t.body,S.patients[0]))}</p></div>`).join('');
+    $$('[data-tpl]').forEach(el=>el.onclick=()=>{selTemplate=Number(el.dataset.tpl);$('#bcMessage').value=TEMPLATES[selTemplate].body;renderBroadcasts();renderBcPreview();});
+    if(!$('#bcMessage').value.trim())$('#bcMessage').value=TEMPLATES[selTemplate].body;
+    const pts=bcAudiencePts($('#bcAudience').value);
+    $('#bcNotice').textContent=`${pts.length} patients selected for "${$('#bcAudience').value}".`;
+    renderBcPreview();
+    $('#bcLogs').innerHTML=S.broadcasts.length?S.broadcasts.slice().reverse().map(l=>`<div class="log-row"><div style="display:flex;justify-content:space-between;gap:12px"><strong>${safe(l.objective)}</strong><span class="tag">${fmt(l.date)}</span></div><div class="queue-meta"><span class="tag">${safe(l.audience)}</span><span class="tag blue">${l.count} patients</span></div><div style="margin-top:8px;font-size:12px;color:var(--muted)">${safe(l.preview)}</div></div>`).join(''):'<div class="empty">No campaigns yet.</div>';
+  }
+
+  function renderBcPreview(){
+    const s=bcAudiencePts($('#bcAudience').value)[0]||S.patients[0];
+    $('#bcPreview').innerHTML=(fillTpl($('#bcMessage').value||'',s)).replace(/\n/g,'<br>');
+  }
+
+  function renderReferrals(){
+    $('#refPatient').innerHTML=S.patients.map(p=>`<option value="${p.id}"${p.id===selPat?' selected':''}>${safe(p.name)} — ${safe(p.condition)}</option>`).join('');
+    genRefPreview();
+  }
+
+  function genRefPreview(){
+    const p=S.patients.find(x=>x.id===$('#refPatient').value)||S.patients[0];
+    if(!p)return;
+    const lr=(p.reports||[]).slice(-1)[0];
+    const lv=timeline(p)[0];
+    $('#refPreview').innerHTML=`<div style="display:grid;gap:8px;font-size:14px">
+      <div><strong>From:</strong> ${safe(S.clinic.name)} • ${safe(S.clinic.doctorName)}</div>
+      <div><strong>To:</strong> ${safe($('#refSpecialist').value||'Specialist')}</div>
+      <div><strong>Patient:</strong> ${safe(p.name)} • ${safe(String(p.age))} • ${safe(p.gender)} • ${safe(p.condition)}</div>
+      <div><strong>Reason:</strong> ${safe($('#refReason').value||'Specialist review requested')}</div>
+      <div><strong>Urgency:</strong> ${safe($('#refUrgency').value)}</div>
+      <div><strong>Clinical notes:</strong> ${safe(p.notes||'—')}</div>
+      <div><strong>Latest activity:</strong> ${safe(lv?.summary||'—')}</div>
+      <div><strong>Latest report:</strong> ${safe(lr?`${lr.name} (${lr.status})`:'None attached')}</div>
+      <div><strong>Note for specialist:</strong> ${safe($('#refNote').value||'Please review and advise.')}</div>
+    </div>`;
+  }
+
+  function renderSettings(){
+    $('#sClinic').value=S.clinic.name;
+    $('#sDoctor').value=S.clinic.doctorName;
+    $('#sWA').value=S.clinic.whatsapp;
+    $('#sFee').value=S.clinic.avgFee;
+    $('#sTagline').value=S.clinic.tagline||'';
+  }
+
+  function saveRender(){save();renderDashboard();renderPatients();renderCohorts();renderBroadcasts();renderReferrals();renderSettings();}
+
+  // Navigation
+  $$('.nav-btn').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.page)));
+  $('#searchInput').addEventListener('input',renderPatients);
+  $('#condFilter').addEventListener('change',renderPatients);
+  $('#cohortWindow').addEventListener('change',renderCohorts);
+  $('#bcAudience').addEventListener('change',()=>{renderBroadcasts();});
+  $('#bcObjective').addEventListener('change',renderBcPreview);
+  $('#bcMessage').addEventListener('input',renderBcPreview);
+
+  $('#recallTemplateBtn').onclick=()=>{$('#bcAudience').value='Overdue Follow-ups';$('#bcObjective').value='Follow-up recall';$('#bcMessage').value='Hello {{name}}, this is {{clinic}}. Your review is overdue. Please reply to book your appointment.';renderBroadcasts();};
+  $('#sendBcBtn').onclick=()=>{const a=$('#bcAudience').value;const pts=bcAudiencePts(a);const prev=fillTpl($('#bcMessage').value,pts[0]||S.patients[0]);S.broadcasts.push({id:uid(),date:todayISO(),audience:a,objective:$('#bcObjective').value,count:pts.length,preview:prev});saveRender();alert(`Simulated broadcast to ${pts.length} patients.`);};
+  $('#broadcastCohortBtn').onclick=()=>{navigate('broadcasts');$('#bcAudience').value=selCohort||'All Patients';$('#bcObjective').value='Follow-up recall';$('#bcMessage').value=`Hello {{name}}, this is {{clinic}}. ${selCohort||''} follow-up reviews are now due. Reply to book a priority slot.`;renderBroadcasts();};
+  $('#genRefBtn').onclick=()=>{const p=S.patients.find(x=>x.id===$('#refPatient').value);if(!p)return;p.referral={specialist:$('#refSpecialist').value,reason:$('#refReason').value,urgency:$('#refUrgency').value,date:todayISO()};(p.visits||=[]).push({id:uid(),date:todayISO(),type:'Referral',summary:`Referral generated for ${$('#refSpecialist').value||'specialist'} — ${$('#refReason').value||'clinical review'}.`});saveRender();alert('Referral saved to patient timeline.');};
+  $('#printRefBtn').onclick=()=>{genRefPreview();const w=window.open('','_blank');w.document.write(`<html><head><title>Referral</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#111}.box{border:1px solid #ddd;border-radius:12px;padding:24px}h1{margin:0 0 4px}hr{margin:18px 0;border-color:#eee}</style></head><body><div class="box"><h1>${safe(S.clinic.name)}</h1><div style="color:#555">${safe(S.clinic.doctorName)}</div><hr>${$('#refPreview').innerHTML}</div><script>window.print()<\/script></body></html>`);w.document.close();};
+  $('#saveSettingsBtn').onclick=()=>{S.clinic.name=$('#sClinic').value.trim()||S.clinic.name;S.clinic.doctorName=$('#sDoctor').value.trim()||S.clinic.doctorName;S.clinic.whatsapp=$('#sWA').value.trim()||S.clinic.whatsapp;S.clinic.avgFee=Number($('#sFee').value||S.clinic.avgFee);S.clinic.tagline=$('#sTagline').value.trim();saveRender();alert('Settings saved.');};
+
+  function doExport(){const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='medbrief-data.json';a.click();URL.revokeObjectURL(a.href);}
+  $('#exportBtn').onclick=doExport;
+  $('#exportBtn2').onclick=doExport;
+
+  function doReset(){if(!confirm('Reset to demo data?'))return;S=seed();selPat=S.patients[0]?.id||null;patTab='overview';saveRender();}
+  $('#resetBtn').onclick=doReset;
+  $('#resetBtn2').onclick=doReset;
+
+  $('#importInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.patients||!d.clinic)throw 0;S=d;selPat=S.patients[0]?.id||null;saveRender();alert('Data imported.');}catch{alert('Invalid file.');}};r.readAsText(f);});
+
+  // Modal
+  const modal=$('#patientModal');
+  function openModal(){modal.style.display='flex';$('#nFee').value=S.clinic.avgFee||600;$('#nLastVisit').value=todayISO();$('#nFollowUp').value=offsetISO(30);}
+  function closeModal(){modal.style.display='none';}
+  $('#openAddPatient').onclick=openModal;
+  $('#openAddPatient2').onclick=openModal;
+  $('#closeModal').onclick=closeModal;
+  modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
+
+  $('#savePatientBtn').onclick=()=>{
+    const n=$('#nName').value.trim();const ph=$('#nPhone').value.trim();
+    if(!n||!ph){alert('Name and phone required.');return;}
+    const rn=$('#nReport').value.trim();
+    const p={id:uid(),name:n,phone:ph,age:Number($('#nAge').value||0),gender:$('#nGender').value,condition:$('#nCondition').value,consultFee:Number($('#nFee').value||S.clinic.avgFee||600),lastVisit:$('#nLastVisit').value||todayISO(),nextFollowUp:$('#nFollowUp').value||offsetISO(30),notes:$('#nNotes').value.trim(),reports:rn?[{id:uid(),name:rn,status:$('#nReportStatus').value,date:todayISO()}]:[],visits:[{id:uid(),date:$('#nLastVisit').value||todayISO(),type:'Visit',summary:$('#nNotes').value.trim()||'Initial file created.'}],referral:null};
+    if(rn)p.visits.push({id:uid(),date:todayISO(),type:'Report',summary:`${rn} added. Status: ${$('#nReportStatus').value}.`});
+    S.patients.unshift(p);selPat=p.id;saveRender();closeModal();
+    ['#nName','#nPhone','#nAge','#nNotes','#nReport'].forEach(s=>$(s).value='');
+  };
+
+  $('#refPatient').addEventListener('change',genRefPreview);
+  $('#refSpecialist').addEventListener('input',genRefPreview);
+  $('#refReason').addEventListener('input',genRefPreview);
+  $('#refUrgency').addEventListener('change',genRefPreview);
+  $('#refNote').addEventListener('input',genRefPreview);
+
+  window._MB={open(id){selPat=id;navigate('patients');renderPatients();}};
+
+  saveRender();
+})();
+</script>
+</body>
+</html>
