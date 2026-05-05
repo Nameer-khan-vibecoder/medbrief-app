@@ -1351,7 +1351,7 @@
       renderPatients();
       if (btn.dataset.tab === 'bodymap') {
         var _pt = state.patients.find(function(x){ return x.id === state.activePatient; });
-        if (_pt) { setTimeout(function(){ initBodyMap(_pt.condition || 'General'); }, 0); }
+        if (_pt) { requestAnimationFrame(function(){ requestAnimationFrame(function(){ initBodyMap(_pt.condition || 'General'); }); }); }
       }
     }));
 
