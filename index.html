@@ -1,1 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedBrief — Clinic OS Prototype</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#111a2e;
+      --panel-2:#17233d;
+      --panel-3:#0f172a;
+      --line:rgba(255,255,255,.08);
+      --text:#e5edf8;
+      --muted:#92a1ba;
+      --blue:#4f8cff;
+      --blue-2:#2563eb;
+      --green:#10b981;
+      --amber:#f59e0b;
+      --red:#ef4444;
+      --purple:#8b5cf6;
+      --cyan:#06b6d4;
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#09101c,#0b1220 30%,#0b1220);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    a{color:inherit}
+    button,input,select,textarea{font:inherit}
+    .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+    .sidebar{
+      position:sticky;top:0;height:100vh;padding:22px 18px;border-right:1px solid var(--line);
+      background:rgba(8,14,26,.84);backdrop-filter:blur(16px)
+    }
+    .brand{
+      display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:18px
+    }
+    .brand-logo{
+      width:40px;height:40px;border-radius:12px;
+      background:linear-gradient(135deg,var(--blue),var(--green));
+      display:grid;place-items:center;font-weight:800;color:#fff
+    }
+    .brand h1{font-size:20px;line-height:1;margin:0}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
+    .nav{
+      display:flex;flex-direction:column;gap:8px;margin-top:10px
+    }
+    .nav-btn{
+      width:100%;display:flex;align-items:center;gap:12px;padding:14px 14px;border-radius:14px;
+      background:transparent;border:1px solid transparent;color:var(--text);cursor:pointer;text-align:left
+    }
+    .nav-btn:hover{background:rgba(255,255,255,.04);border-color:var(--line)}
+    .nav-btn.active{background:rgba(79,140,255,.12);border-color:rgba(79,140,255,.3)}
+    .nav-ico{
+      width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:16px
+    }
+    .sidebar-card{
+      margin-top:18px;background:linear-gradient(180deg,rgba(79,140,255,.12),rgba(16,185,129,.08));
+      border:1px solid rgba(79,140,255,.18);border-radius:18px;padding:16px
+    }
+    .sidebar-card h3{margin:0 0 8px;font-size:15px}
+    .sidebar-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+    .sidebar-card .mini-stat{margin-top:12px;padding:12px;border-radius:12px;background:rgba(255,255,255,.05);font-size:13px}
+    .main{padding:26px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:22px
+    }
+    .title-wrap h2{margin:0;font-size:30px;letter-spacing:-.03em}
+    .title-wrap p{margin:6px 0 0;color:var(--muted);font-size:14px}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);
+      padding:12px 16px;border-radius:12px;cursor:pointer
+    }
+    .btn:hover{background:rgba(255,255,255,.07)}
+    .btn.primary{background:linear-gradient(135deg,var(--blue),var(--blue-2));border:none}
+    .btn.green{background:linear-gradient(135deg,var(--green),#059669);border:none}
+    .btn.red{background:linear-gradient(135deg,#ef4444,#dc2626);border:none}
+    .btn.ghost{background:transparent}
+    .btn.small{padding:8px 12px;font-size:13px;border-radius:10px}
+    .grid{display:grid;gap:18px}
+    .grid.cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.02));
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)
+    }
+    .stat-card{padding:18px}
+    .stat-top{display:flex;justify-content:space-between;align-items:center}
+    .stat-label{font-size:13px;color:var(--muted)}
+    .stat-icon{
+      width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.05);display:grid;place-items:center
+    }
+    .stat-value{margin-top:14px;font-size:34px;font-weight:800;letter-spacing:-.04em}
+    .stat-foot{margin-top:8px;color:var(--muted);font-size:12px}
+    .layout-2{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-top:18px}
+    .section-card{padding:18px}
+    .section-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
+    .section-head h3{margin:0;font-size:18px}
+    .section-head p{margin:5px 0 0;color:var(--muted);font-size:13px}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);padding:8px 12px;border-radius:999px;
+      font-size:12px;color:var(--muted);background:rgba(255,255,255,.03)
+    }
+    .dot{width:8px;height:8px;border-radius:999px;background:var(--green)}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .queue-item,.patient-row,.timeline-item,.log-row,.cohort-row{
+      border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)
+    }
+    .queue-item{display:grid;grid-template-columns:1fr auto;gap:14px;padding:14px}
+    .queue-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+    .tag{
+      display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;
+      background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted)
+    }
+    .tag.blue{background:rgba(79,140,255,.12);color:#bdd4ff;border-color:rgba(79,140,255,.2)}
+    .tag.green{background:rgba(16,185,129,.12);color:#b7f2de;border-color:rgba(16,185,129,.2)}
+    .tag.amber{background:rgba(245,158,11,.12);color:#ffe1a5;border-color:rgba(245,158,11,.2)}
+    .tag.red{background:rgba(239,68,68,.12);color:#ffc4c4;border-color:rgba(239,68,68,.2)}
+    .progress{
+      width:100%;height:12px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden
+    }
+    .progress > span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--green))}
+    .legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .legend .item{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+    .legend .sw{width:12px;height:12px;border-radius:999px}
+    .revenue-bars{display:flex;flex-direction:column;gap:12px}
+    .bar-row{display:grid;grid-template-columns:140px 1fr 90px;gap:12px;align-items:center}
+    .bar-label{font-size:13px;color:var(--muted)}
+    .bar{
+      height:12px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden
+    }
+    .bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--amber),var(--red))}
+    .bar-value{text-align:right;font-size:13px;color:var(--text)}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+    .field, .select, .textarea{
+      width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text);
+      border-radius:12px;padding:12px 14px;outline:none
+    }
+    .textarea{min-height:110px;resize:vertical}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .page{display:none}
+    .page.active{display:block}
+    .patients-layout{display:grid;grid-template-columns:360px 1fr;gap:18px}
+    .panel{padding:18px}
+    .patient-list{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 250px);overflow:auto;padding-right:4px}
+    .patient-row{padding:14px;cursor:pointer}
+    .patient-row.active{outline:2px solid rgba(79,140,255,.35);background:rgba(79,140,255,.08)}
+    .patient-row h4{margin:0 0 6px;font-size:16px}
+    .patient-row p{margin:0;color:var(--muted);font-size:13px}
+    .patient-top{display:flex;justify-content:space-between;gap:10px}
+    .patient-header{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+    .avatar{
+      width:62px;height:62px;border-radius:18px;background:linear-gradient(135deg,var(--blue),var(--purple));
+      display:grid;place-items:center;font-weight:800;font-size:20px
+    }
+    .patient-id{color:var(--muted);font-size:13px;margin-top:6px}
+    .risk-box{
+      min-width:220px;padding:14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line)
+    }
+    .risk-score{font-size:34px;font-weight:800}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+    .tab-btn{
+      padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);cursor:pointer
+    }
+    .tab-btn.active{background:rgba(79,140,255,.12);border-color:rgba(79,140,255,.25)}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+    .timeline{display:flex;flex-direction:column;gap:12px}
+    .timeline-item{padding:14px}
+    .timeline-item h4{margin:0 0 6px;font-size:15px}
+    .timeline-item p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+    .timeline-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px}
+    .metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+    .mini{
+      padding:14px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--line)
+    }
+    .mini .k{font-size:12px;color:var(--muted)}
+    .mini .v{font-size:22px;font-weight:800;margin-top:8px}
+    .wa-preview{
+      border:1px solid rgba(16,185,129,.18);background:linear-gradient(180deg,rgba(16,185,129,.08),rgba(16,185,129,.03));
+      border-radius:16px;padding:16px;margin-top:12px
+    }
+    .wa-bubble{
+      margin-top:12px;background:#0d2c20;border:1px solid rgba(255,255,255,.05);padding:14px;border-radius:14px;max-width:540px
+    }
+    .broadcast-grid{display:grid;grid-template-columns:1fr .95fr;gap:18px}
+    .template-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .template{
+      padding:14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer
+    }
+    .template.active{background:rgba(79,140,255,.08);border-color:rgba(79,140,255,.25)}
+    .empty{
+      padding:28px;border-radius:16px;border:1px dashed var(--line);text-align:center;color:var(--muted)
+    }
+    .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .sources{
+      margin-top:18px;font-size:12px;color:var(--muted)
+    }
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:50
+    }
+    .modal{
+      width:min(900px,100%);max-height:90vh;overflow:auto;border-radius:22px;border:1px solid var(--line);
+      background:linear-gradient(180deg,#10192c,#0d1526);box-shadow:var(--shadow)
+    }
+    .modal .panel{padding:20px}
+    .modal-head{
+      display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:1px solid var(--line)
+    }
+    .close{
+      width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;cursor:pointer
+    }
+    .notice{
+      margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.18);color:#c8f4ff;font-size:13px
+    }
+    .hidden{display:none!important}
+    .footer-note{margin-top:18px;color:var(--muted);font-size:12px}
+    @media (max-width:1200px){
+      .grid.cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .layout-2,.patients-layout,.broadcast-grid,.settings-grid{grid-template-columns:1fr}
+    }
+    @media (max-width:900px){
+      .app{grid-template-columns:1fr}
+      .sidebar{position:relative;height:auto}
+      .main{padding:18px}
+      .three-col,.two-col,.metric-row,.template-grid{grid-template-columns:1fr}
+      .topbar{flex-direction:column;align-items:flex-start}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">M</div>
+      <div>
+        <h1>MedBrief</h1>
+        <p>Clinic OS Prototype</p>
+      </div>
+    </div>
 
+    <div class="nav">
+      <button class="nav-btn active" data-page="dashboard">
+        <span class="nav-ico">📊</span>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-btn" data-page="patients">
+        <span class="nav-ico">🧑‍⚕️</span>
+        <span>Patients</span>
+      </button>
+      <button class="nav-btn" data-page="cohorts">
+        <span class="nav-ico">🩺</span>
+        <span>Cohorts</span>
+      </button>
+      <button class="nav-btn" data-page="broadcasts">
+        <span class="nav-ico">📣</span>
+        <span>Broadcasts</span>
+      </button>
+      <button class="nav-btn" data-page="referrals">
+        <span class="nav-ico">📄</span>
+        <span>Referrals</span>
+      </button>
+      <button class="nav-btn" data-page="settings">
+        <span class="nav-ico">⚙️</span>
+        <span>Settings</span>
+      </button>
+    </div>
+
+    <div class="sidebar-card">
+      <h3>Competitive edge stack</h3>
+      <p>Built around what large Indian clinic tools usually miss: revenue-at-risk visibility, cohort recall, WhatsApp-first communication, and clean specialist referral summaries.</p>
+      <div class="mini-stat" id="edgeSummary">Loading clinic intelligence…</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h2 id="pageTitle">Dashboard</h2>
+        <p id="pageSub">See retention risk, revenue at risk, and the recall queue.</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="seedDemoBtn">Reset Demo Data</button>
+        <button class="btn" id="exportBtn">Export JSON</button>
+        <button class="btn primary" id="openAddPatientTop">+ Add Patient</button>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <section class="page active" id="page-dashboard">
+      <div class="grid cards" id="dashboardCards"></div>
+
+      <div class="layout-2">
+        <div class="card section-card">
+          <div class="section-head">
+            <div>
+              <h3>Recall queue</h3>
+              <p>Highest-value patients to bring back first.</p>
+            </div>
+            <span class="pill"><span class="dot"></span><span id="queueCount">0 active</span></span>
+          </div>
+          <div class="list" id="recallQueue"></div>
+        </div>
+
+        <div class="card section-card">
+          <div class="section-head">
+            <div>
+              <h3>Cohort health</h3>
+              <p>Where retention is breaking by condition.</p>
+            </div>
+          </div>
+          <div id="cohortSummary"></div>
+          <div class="legend">
+            <div class="item"><span class="sw" style="background:var(--green)"></span>Healthy follow-up</div>
+            <div class="item"><span class="sw" style="background:var(--amber)"></span>Due soon</div>
+            <div class="item"><span class="sw" style="background:var(--red)"></span>Overdue</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layout-2">
+        <div class="card section-card">
+          <div class="section-head">
+            <div>
+              <h3>Revenue at risk</h3>
+              <p>Lost follow-up income by cohort.</p>
+            </div>
+          </div>
+          <div class="revenue-bars" id="revenueBars"></div>
+        </div>
+
+        <div class="card section-card">
+          <div class="section-head">
+            <div>
+              <h3>Today's care gaps</h3>
+              <p>Clinical and retention alerts from the timeline.</p>
+            </div>
+          </div>
+          <div class="list" id="careGaps"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Patients -->
+    <section class="page" id="page-patients">
+      <div class="patients-layout">
+        <div class="card panel">
+          <div class="section-head">
+            <div>
+              <h3>Patient directory</h3>
+              <p>Search, filter, and open any patient file.</p>
+            </div>
+            <button class="btn small primary" id="openAddPatientSide">+ Add</button>
+          </div>
+          <div class="toolbar">
+            <input class="field" id="patientSearch" placeholder="Search by name, phone, or condition" />
+            <select class="select" id="patientConditionFilter">
+              <option value="all">All conditions</option>
+              <option>Diabetes</option>
+              <option>Hypertension</option>
+              <option>Thyroid</option>
+              <option>Asthma</option>
+              <option>CKD</option>
+              <option>Cardiac</option>
+              <option>General</option>
+            </select>
+          </div>
+          <div class="patient-list" id="patientList"></div>
+        </div>
+
+        <div class="card panel" id="patientDetailWrap">
+          <div class="empty">Select a patient to view the full timeline, reminders, referrals, and WhatsApp delivery preview.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cohorts -->
+    <section class="page" id="page-cohorts">
+      <div class="card section-card">
+        <div class="section-head">
+          <div>
+            <h3>Chronic cohort engine</h3>
+            <p>Find which groups are slipping and recall them fast.</p>
+          </div>
+          <div class="toolbar" style="margin:0">
+            <select class="select" id="cohortWindow" style="width:220px">
+              <option value="30">Inactive for 30+ days</option>
+              <option value="60">Inactive for 60+ days</option>
+              <option value="90">Inactive for 90+ days</option>
+            </select>
+            <button class="btn green" id="broadcastSelectedCohort">Broadcast to selected cohort</button>
+          </div>
+        </div>
+        <div id="cohortRows" class="list"></div>
+      </div>
+    </section>
+
+    <!-- Broadcasts -->
+    <section class="page" id="page-broadcasts">
+      <div class="broadcast-grid">
+        <div class="card panel">
+          <div class="section-head">
+            <div>
+              <h3>Broadcast builder</h3>
+              <p>Segmented outreach without manual WhatsApp blasting.</p>
+            </div>
+          </div>
+          <div class="two-col">
+            <div>
+              <label class="footer-note">Audience</label>
+              <select class="select" id="broadcastAudience">
+                <option>All Patients</option>
+                <option>Diabetes</option>
+                <option>Hypertension</option>
+                <option>Thyroid</option>
+                <option>Asthma</option>
+                <option>CKD</option>
+                <option>Cardiac</option>
+                <option>Overdue Follow-ups</option>
+                <option>High Risk Return</option>
+              </select>
+            </div>
+            <div>
+              <label class="footer-note">Campaign objective</label>
+              <select class="select" id="broadcastObjective">
+                <option>Follow-up recall</option>
+                <option>Health camp</option>
+                <option>Vaccination drive</option>
+                <option>Test reminder</option>
+                <option>New service launch</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:16px">
+            <label class="footer-note">Message templates</label>
+            <div class="template-grid" id="templateGrid"></div>
+          </div>
+
+          <div style="margin-top:16px">
+            <label class="footer-note">Custom message</label>
+            <textarea class="textarea" id="broadcastMessage" placeholder="Write your message…"></textarea>
+          </div>
+
+          <div class="notice" id="audienceNotice">0 patients selected.</div>
+          <div class="toolbar">
+            <button class="btn primary" id="sendBroadcastBtn">Simulate WhatsApp Broadcast</button>
+            <button class="btn" id="useQueueTemplateBtn">Use recall template</button>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <div class="section-head">
+            <div>
+              <h3>WhatsApp preview</h3>
+              <p>What the patient would receive.</p>
+            </div>
+          </div>
+          <div class="wa-preview">
+            <div style="font-size:12px;color:#b7f2de">Clinic-branded message</div>
+            <div class="wa-bubble" id="broadcastPreview"></div>
+          </div>
+
+          <div class="section-head" style="margin-top:18px">
+            <div>
+              <h3>Campaign log</h3>
+              <p>Prototype history of outbound campaigns.</p>
+            </div>
+          </div>
+          <div class="list" id="broadcastLogs"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Referrals -->
+    <section class="page" id="page-referrals">
+      <div class="card panel">
+        <div class="section-head">
+          <div>
+            <h3>Referral summary generator</h3>
+            <p>One-page specialist handoff with no paper folder chaos.</p>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div>
+            <label class="footer-note">Patient</label>
+            <select class="select" id="referralPatient"></select>
+          </div>
+          <div>
+            <label class="footer-note">Specialist</label>
+            <input class="field" id="specialistName" placeholder="Dr. A. Kulkarni — Cardiologist" />
+          </div>
+        </div>
+
+        <div class="two-col" style="margin-top:14px">
+          <div>
+            <label class="footer-note">Reason for referral</label>
+            <input class="field" id="referralReason" placeholder="Uncontrolled BP despite current medication" />
+          </div>
+          <div>
+            <label class="footer-note">Urgency</label>
+            <select class="select" id="referralUrgency">
+              <option>Routine</option>
+              <option>Soon</option>
+              <option>Urgent</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <label class="footer-note">Referral note</label>
+          <textarea class="textarea" id="referralNote" placeholder="Key history, recent trends, and questions for the specialist."></textarea>
+        </div>
+
+        <div class="toolbar" style="margin-top:16px">
+          <button class="btn primary" id="generateReferralBtn">Generate Referral Summary</button>
+          <button class="btn" id="printReferralBtn">Open Printable Version</button>
+        </div>
+
+        <div class="wa-preview" id="referralPreviewWrap">
+          <div style="font-size:12px;color:#bdd4ff">Generated summary</div>
+          <div id="referralPreview" style="margin-top:12px;color:var(--text);line-height:1.7"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="page" id="page-settings">
+      <div class="settings-grid">
+        <div class="card panel">
+          <div class="section-head">
+            <div>
+              <h3>Clinic settings</h3>
+              <p>Used in WhatsApp previews, pricing, and referral branding.</p>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div>
+              <label class="footer-note">Clinic name</label>
+              <input class="field" id="clinicName" />
+            </div>
+            <div>
+              <label class="footer-note">Doctor name</label>
+              <input class="field" id="doctorName" />
+            </div>
+          </div>
+
+          <div class="two-col" style="margin-top:14px">
+            <div>
+              <label class="footer-note">WhatsApp number</label>
+              <input class="field" id="clinicWhatsapp" />
+            </div>
+            <div>
+              <label class="footer-note">Average consultation fee</label>
+              <input class="field" id="clinicFee" type="number" />
+            </div>
+          </div>
+
+          <div style="margin-top:14px">
+            <label class="footer-note">Clinic tagline</label>
+            <input class="field" id="clinicTagline" />
+          </div>
+
+          <div class="toolbar" style="margin-top:16px">
+            <button class="btn primary" id="saveSettingsBtn">Save settings</button>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <div class="section-head">
+            <div>
+              <h3>Prototype controls</h3>
+              <p>Useful for demos and investor walkthroughs.</p>
+            </div>
+          </div>
+
+          <div class="list">
+            <div class="queue-item">
+              <div>
+                <strong>Export data</strong>
+                <div class="footer-note">Download the full local clinic dataset as JSON.</div>
+              </div>
+              <button class="btn small" id="exportBtn2">Export</button>
+            </div>
+            <div class="queue-item">
+              <div>
+                <strong>Reset to curated demo</strong>
+                <div class="footer-note">Restores a polished fake clinic with seeded patients.</div>
+              </div>
+              <button class="btn small" id="seedDemoBtn2">Reset</button>
+            </div>
+            <div class="queue-item">
+              <div>
+                <strong>Import data</strong>
+                <div class="footer-note">Load a JSON export back into the prototype.</div>
+              </div>
+              <label class="btn small" style="display:inline-flex;align-items:center;justify-content:center">
+                Import
+                <input type="file" id="importInput" accept=".json" class="hidden" />
+              </label>
+            </div>
+          </div>
+
+          <div class="notice" style="margin-top:16px">
+            This is a static prototype. Data is stored in your browser using localStorage.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Add Patient Modal -->
+<div class="modal-backdrop" id="patientModalBackdrop">
+  <div class="modal">
+    <div class="modal-head panel">
+      <div>
+        <h3 style="margin:0">Add patient</h3>
+        <p style="margin:6px 0 0;color:var(--muted);font-size:13px">Create a patient file and optionally schedule the first follow-up.</p>
+      </div>
+      <button class="close" id="closePatientModal">✕</button>
+    </div>
+    <div class="panel">
+      <div class="three-col">
+        <div>
+          <label class="footer-note">Full name</label>
+          <input class="field" id="newName" />
+        </div>
+        <div>
+          <label class="footer-note">Phone</label>
+          <input class="field" id="newPhone" />
+        </div>
+        <div>
+          <label class="footer-note">Age</label>
+          <input class="field" id="newAge" type="number" />
+        </div>
+      </div>
+
+      <div class="three-col" style="margin-top:14px">
+        <div>
+          <label class="footer-note">Gender</label>
+          <select class="select" id="newGender">
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="footer-note">Primary condition</label>
+          <select class="select" id="newCondition">
+            <option>General</option>
+            <option>Diabetes</option>
+            <option>Hypertension</option>
+            <option>Thyroid</option>
+            <option>Asthma</option>
+            <option>CKD</option>
+            <option>Cardiac</option>
+          </select>
+        </div>
+        <div>
+          <label class="footer-note">Consultation fee</label>
+          <input class="field" id="newFee" type="number" />
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:14px">
+        <div>
+          <label class="footer-note">Last visit date</label>
+          <input class="field" id="newLastVisit" type="date" />
+        </div>
+        <div>
+          <label class="footer-note">Next follow-up date</label>
+          <input class="field" id="newNextFollow" type="date" />
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <label class="footer-note">Latest prescription / notes</label>
+        <textarea class="textarea" id="newNotes" placeholder="Metformin 500mg BD, repeat HbA1c in 90 days."></textarea>
+      </div>
+
+      <div class="two-col" style="margin-top:14px">
+        <div>
+          <label class="footer-note">Latest report name</label>
+          <input class="field" id="newReportName" placeholder="HbA1c, CBC, TSH, Chest X-ray" />
+        </div>
+        <div>
+          <label class="footer-note">Report status</label>
+          <select class="select" id="newReportStatus">
+            <option>Uploaded</option>
+            <option>Pending from lab</option>
+            <option>Shared to patient</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toolbar" style="margin-top:18px">
+        <button class="btn primary" id="savePatientBtn">Create patient</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'medbrief-prototype-v1';
+
+  const $ = (sel, ctx=document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+
+  const today = new Date();
+  const fmtDate = (d) => {
+    const x = new Date(d);
+    if (isNaN(x)) return '—';
+    return x.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  };
+  const dateISO = (daysOffset=0) => {
+    const d = new Date();
+    d.setDate(d.getDate()+daysOffset);
+    return d.toISOString().slice(0,10);
+  };
+  const daysBetween = (a,b) => Math.floor((new Date(a) - new Date(b)) / (1000*60*60*24));
+  const daysSince = (d) => Math.floor((today - new Date(d)) / (1000*60*60*24));
+  const money = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+  const safe = (s='') => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const uid = () => Math.random().toString(36).slice(2,10);
+
+  function seedData(){
+    return {
+      clinic: {
+        name: 'MedBrief Demo Clinic',
+        doctorName: 'Dr. N. Shah',
+        whatsapp: '+91 98765 43210',
+        avgFee: 600,
+        tagline: 'Independent care. Digital follow-up.'
+      },
+      broadcasts: [],
+      patients: [
+        {
+          id: uid(),
+          name: 'Ramesh Patil',
+          phone: '+91 98220 11111',
+          age: 58,
+          gender: 'Male',
+          condition: 'Diabetes',
+          consultFee: 700,
+          lastVisit: dateISO(-96),
+          nextFollowUp: dateISO(-6),
+          notes: 'HbA1c trending upward. Counsel on diet and repeat HbA1c.',
+          reports: [{id:uid(), name:'HbA1c Report', status:'Shared to patient', date:dateISO(-96)}],
+          visits: [
+            {id:uid(), date:dateISO(-96), type:'Visit', summary:'Diabetes review. HbA1c 8.3%. Follow-up in 90 days.'},
+            {id:uid(), date:dateISO(-96), type:'Prescription', summary:'Metformin 500mg BD, lifestyle counselling.'},
+            {id:uid(), date:dateISO(-95), type:'Report', summary:'HbA1c report shared to patient on WhatsApp.'}
+          ],
+          referral: null
+        },
+        {
+          id: uid(),
+          name: 'Sunita Joshi',
+          phone: '+91 97655 22222',
+          age: 47,
+          gender: 'Female',
+          condition: 'Hypertension',
+          consultFee: 600,
+          lastVisit: dateISO(-42),
+          nextFollowUp: dateISO(-3),
+          notes: 'BP still above target. Reinforce adherence and salt restriction.',
+          reports: [{id:uid(), name:'BP Log Sheet', status:'Uploaded', date:dateISO(-42)}],
+          visits: [
+            {id:uid(), date:dateISO(-42), type:'Visit', summary:'Follow-up for hypertension. BP 156/96.'},
+            {id:uid(), date:dateISO(-42), type:'Prescription', summary:'Amlodipine continued; advised home BP log.'}
+          ],
+          referral: null
+        },
+        {
+          id: uid(),
+          name: 'Aarti Kulkarni',
+          phone: '+91 99887 33333',
+          age: 34,
+          gender: 'Female',
+          condition: 'Thyroid',
+          consultFee: 500,
+          lastVisit: dateISO(-18),
+          nextFollowUp: dateISO(12),
+          notes: 'Stable on current dose. Repeat TSH next visit.',
+          reports: [{id:uid(), name:'TSH Lab Result', status:'Shared to patient', date:dateISO(-18)}],
+          visits: [
+            {id:uid(), date:dateISO(-18), type:'Visit', summary:'TSH within acceptable range.'},
+            {id:uid(), date:dateISO(-17), type:'Report', summary:'TSH result sent to patient on WhatsApp.'}
+          ],
+          referral: null
+        },
+        {
+          id: uid(),
+          name: 'Imran Shaikh',
+          phone: '+91 90110 44444',
+          age: 63,
+          gender: 'Male',
+          condition: 'Cardiac',
+          consultFee: 900,
+          lastVisit: dateISO(-61),
+          nextFollowUp: dateISO(-14),
+          notes: 'Intermittent chest discomfort; review meds and consider cardiology referral.',
+          reports: [{id:uid(), name:'ECG Scan', status:'Uploaded', date:dateISO(-61)}],
+          visits: [
+            {id:uid(), date:dateISO(-61), type:'Visit', summary:'Cardiac review. Symptom recurrence reported.'},
+            {id:uid(), date:dateISO(-60), type:'Report', summary:'ECG uploaded to patient file.'}
+          ],
+          referral: { specialist:'Dr. V. Rao — Cardiologist', reason:'Recurrent chest discomfort', urgency:'Soon', date:dateISO(-60) }
+        },
+        {
+          id: uid(),
+          name: 'Meena Deshpande',
+          phone: '+91 98902 55555',
+          age: 51,
+          gender: 'Female',
+          condition: 'CKD',
+          consultFee: 800,
+          lastVisit: dateISO(-74),
+          nextFollowUp: dateISO(-9),
+          notes: 'Creatinine rising slowly. Needs nephrology follow-up and repeat labs.',
+          reports: [{id:uid(), name:'Kidney Function Test', status:'Pending from lab', date:dateISO(-74)}],
+          visits: [
+            {id:uid(), date:dateISO(-74), type:'Visit', summary:'CKD monitoring. Ordered repeat RFT.'}
+          ],
+          referral: null
+        },
+        {
+          id: uid(),
+          name: 'Rahul More',
+          phone: '+91 93267 66666',
+          age: 29,
+          gender: 'Male',
+          condition: 'Asthma',
+          consultFee: 500,
+          lastVisit: dateISO(-11),
+          nextFollowUp: dateISO(19),
+          notes: 'Inhaler technique reviewed. Stable.',
+          reports: [],
+          visits: [
+            {id:uid(), date:dateISO(-11), type:'Visit', summary:'Asthma stable, no night symptoms.'}
+          ],
+          referral: null
+        }
+      ]
+    };
+  }
+
+  let state = loadState();
+  let selectedPatientId = state.patients[0]?.id || null;
+  let activePatientTab = 'overview';
+  let selectedTemplate = 0;
+  let selectedCohort = 'Diabetes';
+
+  const templates = [
+    {
+      title:'Recall reminder',
+      body:'Hello {{name}}, this is {{clinic}}. Your follow-up review is due. Please reply or call us to book your visit this week.'
+    },
+    {
+      title:'Lab test reminder',
+      body:'Hello {{name}}, {{doctor}} has advised your pending tests. Please complete them before your next review at {{clinic}}.'
+    },
+    {
+      title:'Health camp invite',
+      body:'Hello {{name}}, {{clinic}} is running a focused care camp this week. Reply if you want a slot.'
+    },
+    {
+      title:'Medication adherence nudge',
+      body:'Hello {{name}}, regular medicines and timely follow-up help avoid complications. Contact {{clinic}} if you need a review.'
+    }
+  ];
+
+  function loadState(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      const seeded = seedData();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      return seeded;
+    }
+    try { return JSON.parse(raw); }
+    catch(e){
+      const seeded = seedData();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      return seeded;
+    }
+  }
+  function saveState(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function overdueDays(p){
+    return daysBetween(today, p.nextFollowUp);
+  }
+  function isOverdue(p){
+    return overdueDays(p) > 0;
+  }
+  function dueSoon(p){
+    const x = daysBetween(p.nextFollowUp, today);
+    return x >= 0 && x <= 7;
+  }
+  function missedRevenue(p){
+    return isOverdue(p) ? (p.consultFee || state.clinic.avgFee || 0) : 0;
+  }
+  function riskScore(p){
+    let score = 18;
+    const lastGap = daysSince(p.lastVisit);
+    if (lastGap > 90) score += 26;
+    else if (lastGap > 60) score += 18;
+    else if (lastGap > 30) score += 10;
+
+    const over = overdueDays(p);
+    if (over > 21) score += 24;
+    else if (over > 7) score += 16;
+    else if (over > 0) score += 8;
+
+    if (['Diabetes','Hypertension','CKD','Cardiac'].includes(p.condition)) score += 18;
+    if ((p.reports || []).some(r => r.status === 'Pending from lab')) score += 10;
+    if ((p.notes || '').toLowerCase().includes('rising')) score += 8;
+    if ((p.notes || '').toLowerCase().includes('uncontrolled')) score += 8;
+
+    return Math.min(100, score);
+  }
+  function riskLabel(score){
+    if (score >= 70) return ['High return risk','red'];
+    if (score >= 45) return ['Moderate risk','amber'];
+    return ['Stable','green'];
+  }
+  function initials(name=''){
+    return name.split(' ').map(x => x[0]).slice(0,2).join('').toUpperCase();
+  }
+  function patientTimeline(p){
+    const timeline = [...(p.visits||[])];
+    if (p.referral) {
+      timeline.push({
+        id:'ref-'+p.id,
+        date:p.referral.date,
+        type:'Referral',
+        summary:`Referred to ${p.referral.specialist} for ${p.referral.reason}. Urgency: ${p.referral.urgency}.`
+      });
+    }
+    return timeline.sort((a,b)=> new Date(b.date) - new Date(a.date));
+  }
+  function renderPage(name){
+    $$('.page').forEach(p => p.classList.remove('active'));
+    $(`#page-${name}`).classList.add('active');
+    $$('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === name));
+    const titles = {
+      dashboard:['Dashboard','See retention risk, revenue at risk, and the recall queue.'],
+      patients:['Patients','Full patient timeline, reports, follow-ups, and WhatsApp previews.'],
+      cohorts:['Cohorts','Track inactivity by disease cluster and act fast.'],
+      broadcasts:['Broadcasts','Targeted recall and campaign messages without manual chaos.'],
+      referrals:['Referrals','Generate clean one-page specialist summaries.'],
+      settings:['Settings','Clinic branding, pricing, and prototype controls.']
+    };
+    $('#pageTitle').textContent = titles[name][0];
+    $('#pageSub').textContent = titles[name][1];
+  }
+
+  function metricCards(){
+    const overdue = state.patients.filter(isOverdue);
+    const lost = overdue.reduce((a,p)=> a + missedRevenue(p), 0);
+    const highRisk = state.patients.filter(p => riskScore(p) >= 70).length;
+    const dueThisWeek = state.patients.filter(dueSoon).length;
+    return [
+      {label:'Total patients', value:state.patients.length, icon:'👥', foot:'Active files in prototype'},
+      {label:'Overdue follow-ups', value:overdue.length, icon:'⏰', foot:'Patients who should already be back'},
+      {label:'Revenue at risk', value:money(lost), icon:'💸', foot:'Based on missed follow-up fees'},
+      {label:'High-risk returns', value:highRisk + dueThisWeek, icon:'🧠', foot:'Priority queue for recall'}
+    ];
+  }
+
+  function renderDashboard(){
+    $('#dashboardCards').innerHTML = metricCards().map(c => `
+      <div class="card stat-card">
+        <div class="stat-top">
+          <div class="stat-label">${safe(c.label)}</div>
+          <div class="stat-icon">${c.icon}</div>
+        </div>
+        <div class="stat-value">${safe(String(c.value))}</div>
+        <div class="stat-foot">${safe(c.foot)}</div>
+      </div>
+    `).join('');
+
+    const queue = state.patients
+      .map(p => ({...p, risk:riskScore(p), lost:missedRevenue(p)}))
+      .filter(p => p.risk >= 45 || isOverdue(p))
+      .sort((a,b) => (b.lost + b.risk) - (a.lost + a.risk))
+      .slice(0,6);
+
+    $('#queueCount').textContent = `${queue.length} active`;
+    $('#recallQueue').innerHTML = queue.length ? queue.map(p => {
+      const [label, cls] = riskLabel(p.risk);
+      return `
+        <div class="queue-item">
+          <div>
+            <strong>${safe(p.name)}</strong>
+            <div class="queue-meta">
+              <span class="tag">${safe(p.condition)}</span>
+              <span class="tag ${cls}">${label}</span>
+              <span class="tag">${isOverdue(p) ? `${overdueDays(p)} days overdue` : 'Due soon'}</span>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;color:var(--muted)">Revenue at risk</div>
+            <div style="font-size:20px;font-weight:800">${money(p.lost || p.consultFee)}</div>
+            <button class="btn small" onclick="window.MedBrief.openPatient('${p.id}')">Open</button>
+          </div>
+        </div>
+      `;
+    }).join('') : `<div class="empty">No active recall items.</div>`;
+
+    const byCondition = groupByCondition();
+    $('#cohortSummary').innerHTML = Object.keys(byCondition).map(condition => {
+      const pts = byCondition[condition];
+      const healthy = pts.filter(p => !isOverdue(p) && !dueSoon(p)).length;
+      const soon = pts.filter(p => dueSoon(p)).length;
+      const overdue = pts.filter(p => isOverdue(p)).length;
+      const total = Math.max(pts.length,1);
+      return `
+        <div style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px">
+            <div style="font-size:14px">${safe(condition)}</div>
+            <div style="font-size:12px;color:var(--muted)">${pts.length} patients • ${overdue} overdue</div>
+          </div>
+          <div class="progress">
+            <span style="width:${(healthy/total)*100}%;background:var(--green);display:inline-block"></span>
+            <span style="width:${(soon/total)*100}%;background:var(--amber);display:inline-block"></span>
+            <span style="width:${(overdue/total)*100}%;background:var(--red);display:inline-block"></span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const revenueByCondition = Object.entries(byCondition).map(([condition, pts]) => ({
+      condition,
+      value: pts.reduce((a,p)=> a + missedRevenue(p), 0)
+    })).sort((a,b)=>b.value-a.value);
+    const maxRevenue = Math.max(...revenueByCondition.map(r=>r.value),1);
+    $('#revenueBars').innerHTML = revenueByCondition.map(r => `
+      <div class="bar-row">
+        <div class="bar-label">${safe(r.condition)}</div>
+        <div class="bar"><span style="width:${(r.value/maxRevenue)*100}%"></span></div>
+        <div class="bar-value">${money(r.value)}</div>
+      </div>
+    `).join('');
+
+    const gaps = buildCareGaps();
+    $('#careGaps').innerHTML = gaps.length ? gaps.map(g => `
+      <div class="queue-item">
+        <div>
+          <strong>${safe(g.title)}</strong>
+          <div class="queue-meta">
+            <span class="tag ${g.color}">${safe(g.level)}</span>
+            <span class="tag">${safe(g.patient)}</span>
+          </div>
+        </div>
+        <div style="max-width:260px;color:var(--muted);font-size:13px">${safe(g.note)}</div>
+      </div>
+    `).join('') : `<div class="empty">No critical care gaps detected.</div>`;
+
+    const overdueCount = state.patients.filter(isOverdue).length;
+    const highRiskCount = state.patients.filter(p => riskScore(p)>=70).length;
+    $('#edgeSummary').textContent = `${overdueCount} overdue follow-ups, ${highRiskCount} high-risk returns, and ${money(state.patients.reduce((a,p)=>a+missedRevenue(p),0))} currently at risk.`;
+  }
+
+  function groupByCondition(){
+    return state.patients.reduce((acc,p)=>{
+      acc[p.condition] ||= [];
+      acc[p.condition].push(p);
+      return acc;
+    }, {});
+  }
+
+  function buildCareGaps(){
+    const list = [];
+    state.patients.forEach(p=>{
+      if (isOverdue(p)) {
+        list.push({
+          level:'Retention gap',
+          color:'red',
+          patient:p.name,
+          title:`${p.name} missed follow-up`,
+          note:`Overdue by ${overdueDays(p)} days. Potential lost revenue ${money(missedRevenue(p))}.`
+        });
+      }
+      if ((p.reports || []).some(r => r.status === 'Pending from lab')) {
+        list.push({
+          level:'Pending report',
+          color:'amber',
+          patient:p.name,
+          title:`${p.name} has an unresolved test`,
+          note:'Lab report is still pending and blocks proper review.'
+        });
+      }
+      if (riskScore(p) >= 70) {
+        list.push({
+          level:'Clinical risk',
+          color:'red',
+          patient:p.name,
+          title:`${p.name} requires proactive outreach`,
+          note:'High risk score based on chronic condition, follow-up delay, and note pattern.'
+        });
+      }
+    });
+    return list.slice(0,8);
+  }
+
+  function renderPatients(){
+    const query = $('#patientSearch').value.toLowerCase().trim();
+    const filter = $('#patientConditionFilter').value;
+
+    const patients = state.patients.filter(p => {
+      const hay = `${p.name} ${p.phone} ${p.condition}`.toLowerCase();
+      const okayQuery = !query || hay.includes(query);
+      const okayFilter = filter === 'all' || p.condition === filter;
+      return okayQuery && okayFilter;
+    }).sort((a,b)=> new Date(b.lastVisit) - new Date(a.lastVisit));
+
+    $('#patientList').innerHTML = patients.length ? patients.map(p => {
+      const r = riskScore(p);
+      const [label, cls] = riskLabel(r);
+      return `
+        <div class="patient-row ${selectedPatientId===p.id?'active':''}" data-patient="${p.id}">
+          <div class="patient-top">
+            <div>
+              <h4>${safe(p.name)}</h4>
+              <p>${safe(p.condition)} • ${safe(p.age)} • ${safe(p.phone)}</p>
+            </div>
+            <span class="tag ${cls}">${label}</span>
+          </div>
+          <div class="queue-meta">
+            <span class="tag">${isOverdue(p)?`${overdueDays(p)}d overdue`:`Next ${fmtDate(p.nextFollowUp)}`}</span>
+            <span class="tag">${money(p.consultFee || state.clinic.avgFee)}</span>
+          </div>
+        </div>
+      `;
+    }).join('') : `<div class="empty">No patients match your filter.</div>`;
+
+    $$('.patient-row').forEach(row => row.addEventListener('click', ()=>{
+      selectedPatientId = row.dataset.patient;
+      renderPatients();
+      renderReferrals();
+    }));
+
+    const p = state.patients.find(x => x.id === selectedPatientId);
+    if (!p) {
+      $('#patientDetailWrap').innerHTML = `<div class="empty">Select a patient to continue.</div>`;
+      return;
+    }
+
+    const risk = riskScore(p);
+    const [label, cls] = riskLabel(risk);
+    const timeline = patientTimeline(p);
+
+    $('#patientDetailWrap').innerHTML = `
+      <div class="patient-header">
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <div class="avatar">${initials(p.name)}</div>
+          <div>
+            <div style="font-size:26px;font-weight:800;letter-spacing:-.03em">${safe(p.name)}</div>
+            <div class="patient-id">${safe(p.gender)} • ${safe(String(p.age))} • ${safe(p.phone)} • ${safe(p.condition)}</div>
+            <div class="queue-meta" style="margin-top:12px">
+              <span class="tag">${safe(state.clinic.name)}</span>
+              <span class="tag ${cls}">${label}</span>
+              <span class="tag">${isOverdue(p)?`${overdueDays(p)} days overdue`:`Due ${fmtDate(p.nextFollowUp)}`}</span>
+            </div>
+          </div>
+        </div>
+        <div class="risk-box">
+          <div style="font-size:12px;color:var(--muted)">Return-risk engine</div>
+          <div class="risk-score">${risk}</div>
+          <div class="footer-note">Score combines chronic condition, inactivity, overdue follow-up, and report status.</div>
+        </div>
+      </div>
+
+      <div class="metric-row">
+        <div class="mini"><div class="k">Last visit</div><div class="v">${fmtDate(p.lastVisit)}</div></div>
+        <div class="mini"><div class="k">Next follow-up</div><div class="v">${fmtDate(p.nextFollowUp)}</div></div>
+        <div class="mini"><div class="k">Revenue at risk</div><div class="v">${money(missedRevenue(p))}</div></div>
+        <div class="mini"><div class="k">Reports</div><div class="v">${(p.reports||[]).length}</div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn ${activePatientTab==='overview'?'active':''}" data-tab="overview">Overview</button>
+        <button class="tab-btn ${activePatientTab==='timeline'?'active':''}" data-tab="timeline">Timeline</button>
+        <button class="tab-btn ${activePatientTab==='reports'?'active':''}" data-tab="reports">Reports</button>
+        <button class="tab-btn ${activePatientTab==='followup'?'active':''}" data-tab="followup">Follow-up</button>
+        <button class="tab-btn ${activePatientTab==='broadcast'?'active':''}" data-tab="broadcast">WhatsApp</button>
+        <button class="tab-btn ${activePatientTab==='referral'?'active':''}" data-tab="referral">Referral</button>
+      </div>
+
+      <div class="tab-pane ${activePatientTab==='overview'?'active':''}" data-pane="overview">
+        <div class="timeline-item">
+          <h4>Clinical notes</h4>
+          <p>${safe(p.notes || 'No notes available.')}</p>
+        </div>
+        <div class="timeline-item" style="margin-top:12px">
+          <h4>Retention insight</h4>
+          <p>${buildPatientInsight(p)}</p>
+        </div>
+      </div>
+
+      <div class="tab-pane ${activePatientTab==='timeline'?'active':''}" data-pane="timeline">
+        <div class="toolbar">
+          <button class="btn small" id="addVisitBtn">+ Add visit note</button>
+        </div>
+        <div class="timeline">
+          ${timeline.length ? timeline.map(t => `
+            <div class="timeline-item">
+              <div class="timeline-head">
+                <h4>${safe(t.type)}</h4>
+                <span class="tag">${fmtDate(t.date)}</span>
+              </div>
+              <p>${safe(t.summary)}</p>
+            </div>
+          `).join('') : `<div class="empty">No timeline entries yet.</div>`}
+        </div>
+      </div>
+
+      <div class="tab-pane ${activePatientTab==='reports'?'active':''}" data-pane="reports">
+        <div class="toolbar">
+          <button class="btn small" id="addReportBtn">+ Add report</button>
+        </div>
+        <div class="timeline">
+          ${(p.reports||[]).length ? p.reports.slice().reverse().map(r => `
+            <div class="timeline-item">
+              <div class="timeline-head">
+                <h4>${safe(r.name)}</h4>
+                <span class="tag">${fmtDate(r.date)}</span>
+              </div>
+              <p>Status: ${safe(r.status)}</p>
+            </div>
+          `).join('') : `<div class="empty">No reports uploaded yet.</div>`}
+        </div>
+      </div>
+
+      <div class="tab-pane ${activePatientTab==='followup'?'active':''}" data-pane="followup">
+        <div class="two-col">
+          <div>
+            <label class="footer-note">Next follow-up date</label>
+            <input class="field" id="patientFollowDate" type="date" value="${safe(p.nextFollowUp)}" />
+          </div>
+          <div>
+            <label class="footer-note">Follow-up message</label>
+            <input class="field" id="patientFollowMsg" value="Hello ${safe(p.name)}, your review is due. Please reply to confirm a slot." />
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn primary" id="saveFollowupBtn">Save reminder</button>
+          <button class="btn green" id="markVisitDoneBtn">Mark follow-up completed today</button>
+        </div>
+        <div class="notice">${isOverdue(p) ? `This patient is overdue by ${overdueDays(p)} days.` : `This patient is not overdue. Next review is ${fmtDate(p.nextFollowUp)}.`}</div>
+      </div>
+
+      <div class="tab-pane ${activePatientTab==='broadcast'?'active':''}" data-pane="broadcast">
+        <div class="wa-preview">
+          <div style="font-size:12px;color:#b7f2de">Branded WhatsApp delivery preview</div>
+          <div class="wa-bubble">
+            Hello ${safe(p.name)}, this is ${safe(state.clinic.name)}.<br><br>
+            Your latest file: <strong>${safe((p.reports||[]).slice(-1)[0]?.name || 'Prescription update')}</strong><br>
+            Status: ${safe((p.reports||[]).slice(-1)[0]?.status || 'Ready')}<br><br>
+            Doctor: ${safe(state.clinic.doctorName)}<br>
+            Follow-up: ${fmtDate(p.nextFollowUp)}<br><br>
+            Reply here to request your next appointment.
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn green" id="simulateSendBtn">Simulate send</button>
+        </div>
+      </div>
+
+      <div class="tab-pane ${activePatientTab==='referral'?'active':''}" data-pane="referral">
+        <div class="timeline-item">
+          <h4>Referral quick action</h4>
+          <p>Generate a one-page handoff for specialists using this patient's file and recent history.</p>
+          <div class="toolbar" style="margin-top:10px">
+            <button class="btn primary" id="openReferralForPatientBtn">Generate referral for ${safe(p.name)}</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    $$('.tab-btn', $('#patientDetailWrap')).forEach(btn => btn.addEventListener('click', ()=>{
+      activePatientTab = btn.dataset.tab;
+      renderPatients();
+    }));
+
+    const addVisitBtn = $('#addVisitBtn');
+    if (addVisitBtn) addVisitBtn.onclick = () => {
+      const summary = prompt('Visit summary');
+      if (!summary) return;
+      p.visits ||= [];
+      p.visits.push({id:uid(), date:dateISO(0), type:'Visit', summary});
+      saveAndRender();
+    };
+
+    const addReportBtn = $('#addReportBtn');
+    if (addReportBtn) addReportBtn.onclick = () => {
+      const name = prompt('Report name');
+      if (!name) return;
+      const status = prompt('Report status', 'Uploaded') || 'Uploaded';
+      p.reports ||= [];
+      p.reports.push({id:uid(), name, status, date:dateISO(0)});
+      p.visits ||= [];
+      p.visits.push({id:uid(), date:dateISO(0), type:'Report', summary:`${name} added to file. Status: ${status}.`});
+      saveAndRender();
+    };
+
+    const saveFollowupBtn = $('#saveFollowupBtn');
+    if (saveFollowupBtn) saveFollowupBtn.onclick = () => {
+      p.nextFollowUp = $('#patientFollowDate').value || p.nextFollowUp;
+      const msg = $('#patientFollowMsg').value.trim();
+      p.visits ||= [];
+      p.visits.push({id:uid(), date:dateISO(0), type:'Reminder', summary:`Reminder scheduled: ${msg}`});
+      saveAndRender();
+      alert('Follow-up reminder saved.');
+    };
+
+    const markVisitDoneBtn = $('#markVisitDoneBtn');
+    if (markVisitDoneBtn) markVisitDoneBtn.onclick = () => {
+      p.lastVisit = dateISO(0);
+      p.nextFollowUp = dateISO(30);
+      p.visits ||= [];
+      p.visits.push({id:uid(), date:dateISO(0), type:'Visit', summary:'Follow-up completed. Next review scheduled in 30 days.'});
+      saveAndRender();
+    };
+
+    const simulateSendBtn = $('#simulateSendBtn');
+    if (simulateSendBtn) simulateSendBtn.onclick = () => {
+      p.visits ||= [];
+      p.visits.push({id:uid(), date:dateISO(0), type:'WhatsApp', summary:'Clinic-branded report message simulated to patient.'});
+      saveAndRender();
+      alert('WhatsApp delivery simulated.');
+    };
+
+    const openReferralForPatientBtn = $('#openReferralForPatientBtn');
+    if (openReferralForPatientBtn) openReferralForPatientBtn.onclick = () => {
+      renderPage('referrals');
+      $('#referralPatient').value = p.id;
+      $('#specialistName').value = p.referral?.specialist || '';
+      $('#referralReason').value = p.referral?.reason || `Specialist review for ${p.condition.toLowerCase()} management`;
+      $('#referralUrgency').value = p.referral?.urgency || 'Routine';
+      $('#referralNote').value = p.notes || '';
+      renderReferrals();
+      generateReferralPreview();
+    };
+  }
+
+  function buildPatientInsight(p){
+    const parts = [];
+    if (isOverdue(p)) parts.push(`Follow-up missed by ${overdueDays(p)} days`);
+    if ((p.reports||[]).some(r => r.status === 'Pending from lab')) parts.push('pending lab work still unresolved');
+    if (['Diabetes','Hypertension','CKD','Cardiac'].includes(p.condition)) parts.push(`chronic ${p.condition.toLowerCase()} cohort needs tighter recall`);
+    parts.push(`estimated revenue at risk is ${money(missedRevenue(p))}`);
+    return parts.join('; ') + '.';
+  }
+
+  function renderCohorts(){
+    const win = Number($('#cohortWindow').value);
+    const groups = groupByCondition();
+    const rows = Object.entries(groups).map(([condition, pts])=>{
+      const inactive = pts.filter(p => daysSince(p.lastVisit) >= win);
+      const overdue = pts.filter(isOverdue);
+      const avgRisk = Math.round(pts.reduce((a,p)=>a+riskScore(p),0)/pts.length);
+      const value = overdue.reduce((a,p)=> a + missedRevenue(p),0);
+      return {condition, pts, inactive, overdue, avgRisk, value};
+    }).sort((a,b)=> b.value - a.value);
+
+    if (rows[0]) selectedCohort ||= rows[0].condition;
+
+    $('#cohortRows').innerHTML = rows.map(row => `
+      <div class="cohort-row" style="padding:16px;${selectedCohort===row.condition?'outline:2px solid rgba(79,140,255,.35)':''}">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap">
+          <div>
+            <div style="font-size:18px;font-weight:700">${safe(row.condition)}</div>
+            <div class="queue-meta">
+              <span class="tag">${row.pts.length} patients</span>
+              <span class="tag amber">${row.inactive.length} inactive ${win}+ days</span>
+              <span class="tag red">${row.overdue.length} overdue</span>
+              <span class="tag blue">Avg risk ${row.avgRisk}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="text-align:right">
+              <div style="font-size:12px;color:var(--muted)">Revenue at risk</div>
+              <div style="font-size:24px;font-weight:800">${money(row.value)}</div>
+            </div>
+            <button class="btn small ${selectedCohort===row.condition?'primary':''}" data-select-cohort="${safe(row.condition)}">Select</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    $$('[data-select-cohort]').forEach(btn => btn.onclick = ()=>{
+      selectedCohort = btn.dataset.selectCohort;
+      renderCohorts();
+    });
+  }
+
+  function broadcastAudiencePatients(audience){
+    if (audience === 'All Patients') return state.patients;
+    if (audience === 'Overdue Follow-ups') return state.patients.filter(isOverdue);
+    if (audience === 'High Risk Return') return state.patients.filter(p => riskScore(p) >= 70);
+    return state.patients.filter(p => p.condition === audience);
+  }
+
+  function fillTemplate(text, patientSample){
+    return text
+      .replaceAll('{{name}}', patientSample?.name || 'Patient')
+      .replaceAll('{{clinic}}', state.clinic.name)
+      .replaceAll('{{doctor}}', state.clinic.doctorName);
+  }
+
+  function renderBroadcasts(){
+    $('#templateGrid').innerHTML = templates.map((t,i)=>`
+      <div class="template ${selectedTemplate===i?'active':''}" data-template="${i}">
+        <strong>${safe(t.title)}</strong>
+        <div class="footer-note" style="margin-top:8px">${safe(fillTemplate(t.body, state.patients[0]))}</div>
+      </div>
+    `).join('');
+
+    $$('[data-template]').forEach(el => el.onclick = ()=>{
+      selectedTemplate = Number(el.dataset.template);
+      $('#broadcastMessage').value = templates[selectedTemplate].body;
+      renderBroadcasts();
+      renderBroadcastPreview();
+    });
+
+    if (!$('#broadcastMessage').value.trim()) {
+      $('#broadcastMessage').value = templates[selectedTemplate].body;
+    }
+
+    const audience = $('#broadcastAudience').value;
+    const pts = broadcastAudiencePatients(audience);
+    $('#audienceNotice').textContent = `${pts.length} patients selected for "${audience}".`;
+    renderBroadcastPreview();
+
+    $('#broadcastLogs').innerHTML = state.broadcasts.length ? state.broadcasts.slice().reverse().map(log => `
+      <div class="log-row" style="padding:14px">
+        <div style="display:flex;justify-content:space-between;gap:12px">
+          <strong>${safe(log.objective)}</strong>
+          <span class="tag">${fmtDate(log.date)}</span>
+        </div>
+        <div class="queue-meta">
+          <span class="tag">${safe(log.audience)}</span>
+          <span class="tag blue">${safe(String(log.count))} patients</span>
+        </div>
+        <div class="footer-note" style="margin-top:10px">${safe(log.preview)}</div>
+      </div>
+    `).join('') : `<div class="empty">No broadcasts sent yet.</div>`;
+  }
+
+  function renderBroadcastPreview(){
+    const audience = $('#broadcastAudience').value;
+    const pts = broadcastAudiencePatients(audience);
+    const sample = pts[0] || state.patients[0];
+    const body = fillTemplate($('#broadcastMessage').value || '', sample);
+    $('#broadcastPreview').innerHTML = body.replace(/\n/g,'<br>');
+  }
+
+  function renderReferrals(){
+    const options = state.patients.map(p => `<option value="${p.id}" ${p.id===selectedPatientId?'selected':''}>${safe(p.name)} — ${safe(p.condition)}</option>`).join('');
+    $('#referralPatient').innerHTML = options;
+    generateReferralPreview();
+  }
+
+  function generateReferralPreview(){
+    const p = state.patients.find(x => x.id === $('#referralPatient').value) || state.patients[0];
+    if (!p) return;
+    const latestReport = (p.reports || []).slice(-1)[0];
+    const latestVisit = patientTimeline(p)[0];
+    const html = `
+      <div style="display:grid;gap:10px">
+        <div><strong>From:</strong> ${safe(state.clinic.name)} • ${safe(state.clinic.doctorName)}</div>
+        <div><strong>To:</strong> ${safe($('#specialistName').value || 'Specialist')}</div>
+        <div><strong>Patient:</strong> ${safe(p.name)} • ${safe(String(p.age))} • ${safe(p.gender)} • ${safe(p.condition)}</div>
+        <div><strong>Reason:</strong> ${safe($('#referralReason').value || 'Specialist review requested')}</div>
+        <div><strong>Urgency:</strong> ${safe($('#referralUrgency').value)}</div>
+        <div><strong>Recent note:</strong> ${safe(p.notes || '—')}</div>
+        <div><strong>Latest activity:</strong> ${safe(latestVisit?.summary || '—')}</div>
+        <div><strong>Latest report:</strong> ${safe(latestReport ? `${latestReport.name} (${latestReport.status})` : 'No report attached')}</div>
+        <div><strong>Question for specialist:</strong> ${safe($('#referralNote').value || 'Please review and advise further management.')}</div>
+      </div>
+    `;
+    $('#referralPreview').innerHTML = html;
+  }
+
+  function renderSettings(){
+    $('#clinicName').value = state.clinic.name;
+    $('#doctorName').value = state.clinic.doctorName;
+    $('#clinicWhatsapp').value = state.clinic.whatsapp;
+    $('#clinicFee').value = state.clinic.avgFee;
+    $('#clinicTagline').value = state.clinic.tagline || '';
+  }
+
+  function saveAndRender(){
+    saveState();
+    renderAll();
+  }
+
+  function renderAll(){
+    renderDashboard();
+    renderPatients();
+    renderCohorts();
+    renderBroadcasts();
+    renderReferrals();
+    renderSettings();
+  }
+
+  // Event wiring
+  $$('.nav-btn').forEach(btn => btn.addEventListener('click', ()=>{
+    renderPage(btn.dataset.page);
+  }));
+
+  $('#patientSearch').addEventListener('input', renderPatients);
+  $('#patientConditionFilter').addEventListener('change', renderPatients);
+  $('#cohortWindow').addEventListener('change', renderCohorts);
+
+  $('#broadcastAudience').addEventListener('change', ()=>{ renderBroadcasts(); });
+  $('#broadcastObjective').addEventListener('change', ()=>{ renderBroadcastPreview(); });
+  $('#broadcastMessage').addEventListener('input', renderBroadcastPreview);
+
+  $('#useQueueTemplateBtn').onclick = () => {
+    $('#broadcastAudience').value = 'Overdue Follow-ups';
+    $('#broadcastObjective').value = 'Follow-up recall';
+    $('#broadcastMessage').value = 'Hello {{name}}, this is {{clinic}}. Your review is overdue. Please reply here and our team will schedule your appointment.';
+    renderBroadcasts();
+  };
+
+  $('#sendBroadcastBtn').onclick = () => {
+    const audience = $('#broadcastAudience').value;
+    const patients = broadcastAudiencePatients(audience);
+    const preview = fillTemplate($('#broadcastMessage').value, patients[0] || state.patients[0]);
+    state.broadcasts.push({
+      id: uid(),
+      date: dateISO(0),
+      audience,
+      objective: $('#broadcastObjective').value,
+      count: patients.length,
+      preview
+    });
+    saveAndRender();
+    alert(`Simulated WhatsApp broadcast sent to ${patients.length} patients.`);
+  };
+
+  $('#broadcastSelectedCohort').onclick = () => {
+    renderPage('broadcasts');
+    $('#broadcastAudience').value = selectedCohort;
+    $('#broadcastObjective').value = 'Follow-up recall';
+    $('#broadcastMessage').value = `Hello {{name}}, this is {{clinic}}. ${selectedCohort} follow-up reviews are due. Reply here if you want a priority slot.`;
+    renderBroadcasts();
+  };
+
+  $('#generateReferralBtn').onclick = () => {
+    const p = state.patients.find(x => x.id === $('#referralPatient').value);
+    if (!p) return;
+    p.referral = {
+      specialist: $('#specialistName').value,
+      reason: $('#referralReason').value,
+      urgency: $('#referralUrgency').value,
+      date: dateISO(0)
+    };
+    p.visits ||= [];
+    p.visits.push({
+      id: uid(),
+      date: dateISO(0),
+      type: 'Referral',
+      summary: `Referral generated for ${$('#specialistName').value || 'specialist'} — ${$('#referralReason').value || 'clinical review requested'}.`
+    });
+    saveAndRender();
+    alert('Referral summary generated and saved to the patient timeline.');
+  };
+
+  $('#printReferralBtn').onclick = () => {
+    generateReferralPreview();
+    const win = window.open('', '_blank');
+    const html = `
+      <html>
+        <head>
+          <title>Referral Summary</title>
+          <style>
+            body{font-family:Inter,Arial,sans-serif;padding:32px;color:#111}
+            .box{border:1px solid #ddd;border-radius:16px;padding:24px}
+            h1{margin:0 0 6px;font-size:28px}
+            p{line-height:1.7}
+            .muted{color:#555}
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <h1>${state.clinic.name}</h1>
+            <div class="muted">Doctor: ${state.clinic.doctorName}</div>
+            <hr style="margin:18px 0">
+            ${$('#referralPreview').innerHTML}
+          </div>
+          <script>window.print()<\/script>
+        </body>
+      </html>
+    `;
+    win.document.write(html);
+    win.document.close();
+  };
+
+  $('#saveSettingsBtn').onclick = () => {
+    state.clinic.name = $('#clinicName').value.trim() || state.clinic.name;
+    state.clinic.doctorName = $('#doctorName').value.trim() || state.clinic.doctorName;
+    state.clinic.whatsapp = $('#clinicWhatsapp').value.trim() || state.clinic.whatsapp;
+    state.clinic.avgFee = Number($('#clinicFee').value || state.clinic.avgFee);
+    state.clinic.tagline = $('#clinicTagline').value.trim();
+    saveAndRender();
+    alert('Clinic settings saved.');
+  };
+
+  function exportJSON(){
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'medbrief-prototype-data.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  $('#exportBtn').onclick = exportJSON;
+  $('#exportBtn2').onclick = exportJSON;
+
+  function resetDemo(){
+    if (!confirm('Reset to demo data? This will overwrite current prototype data.')) return;
+    state = seedData();
+    selectedPatientId = state.patients[0]?.id || null;
+    activePatientTab = 'overview';
+    saveAndRender();
+  }
+  $('#seedDemoBtn').onclick = resetDemo;
+  $('#seedDemoBtn2').onclick = resetDemo;
+
+  $('#importInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const parsed = JSON.parse(reader.result);
+        if (!parsed.patients || !parsed.clinic) throw new Error('Invalid file');
+        state = parsed;
+        selectedPatientId = state.patients[0]?.id || null;
+        saveAndRender();
+        alert('Data imported.');
+      }catch(err){
+        alert('Invalid JSON file.');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  const modal = $('#patientModalBackdrop');
+  function openPatientModal(){
+    modal.style.display = 'flex';
+    $('#newFee').value = state.clinic.avgFee || 600;
+    $('#newLastVisit').value = dateISO(0);
+    $('#newNextFollow').value = dateISO(30);
+  }
+  function closePatientModal(){ modal.style.display = 'none'; }
+  $('#openAddPatientTop').onclick = openPatientModal;
+  $('#openAddPatientSide').onclick = openPatientModal;
+  $('#closePatientModal').onclick = closePatientModal;
+  modal.addEventListener('click', (e)=>{ if (e.target === modal) closePatientModal(); });
+
+  $('#savePatientBtn').onclick = () => {
+    const patient = {
+      id: uid(),
+      name: $('#newName').value.trim(),
+      phone: $('#newPhone').value.trim(),
+      age: Number($('#newAge').value || 0),
+      gender: $('#newGender').value,
+      condition: $('#newCondition').value,
+      consultFee: Number($('#newFee').value || state.clinic.avgFee || 600),
+      lastVisit: $('#newLastVisit').value || dateISO(0),
+      nextFollowUp: $('#newNextFollow').value || dateISO(30),
+      notes: $('#newNotes').value.trim(),
+      reports: $('#newReportName').value.trim() ? [{
+        id: uid(),
+        name: $('#newReportName').value.trim(),
+        status: $('#newReportStatus').value,
+        date: dateISO(0)
+      }] : [],
+      visits: [{
+        id: uid(),
+        date: $('#newLastVisit').value || dateISO(0),
+        type: 'Visit',
+        summary: $('#newNotes').value.trim() || 'Initial patient file created.'
+      }],
+      referral: null
+    };
+
+    if (!patient.name || !patient.phone) {
+      alert('Name and phone are required.');
+      return;
+    }
+
+    if (patient.reports.length) {
+      patient.visits.push({
+        id: uid(),
+        date: dateISO(0),
+        type: 'Report',
+        summary: `${patient.reports[0].name} added. Status: ${patient.reports[0].status}.`
+      });
+    }
+
+    state.patients.unshift(patient);
+    selectedPatientId = patient.id;
+    saveAndRender();
+    closePatientModal();
+    ['newName','newPhone','newAge','newNotes','newReportName'].forEach(id => $('#'+id).value = '');
+  };
+
+  $('#referralPatient').addEventListener('change', generateReferralPreview);
+  $('#specialistName').addEventListener('input', generateReferralPreview);
+  $('#referralReason').addEventListener('input', generateReferralPreview);
+  $('#referralUrgency').addEventListener('change', generateReferralPreview);
+  $('#referralNote').addEventListener('input', generateReferralPreview);
+
+  window.MedBrief = {
+    openPatient(id){
+      selectedPatientId = id;
+      renderPage('patients');
+      renderPatients();
+      renderReferrals();
+    }
+  };
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
