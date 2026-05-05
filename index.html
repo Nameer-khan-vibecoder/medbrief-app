@@ -166,6 +166,21 @@
     .tab-btn.active{background:rgba(79,140,255,.12);border-color:rgba(79,140,255,.25)}
     .tab-pane{display:none}
     .tab-pane.active{display:block}
+    @keyframes bodyEntrance{from{opacity:0;transform:rotateY(-40deg) scale(.85)}to{opacity:1;transform:rotateY(0deg) scale(1)}}
+    @keyframes scanAnim{0%{y:0;opacity:.7}50%{y:330;opacity:.9}100%{y:0;opacity:.7}}
+    @keyframes organPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.5) drop-shadow(0 0 6px currentColor)}}
+    .body-organ{cursor:pointer;transition:all .25s ease}
+    .body-organ:hover{filter:brightness(1.4) drop-shadow(0 0 5px rgba(255,255,255,.4))}
+    .organ-card{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:14px;animation:fadeUp .3s ease both}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .impact-bar-wrap{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:12px;color:var(--muted)}
+    .impact-bar{height:6px;border-radius:3px;background:var(--line);flex:1;overflow:hidden}
+    .impact-bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+    .bm-view-btn.active{background:rgba(79,140,255,.18);border-color:rgba(79,140,255,.35)}
+    .severity-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+    .sev-high{background:rgba(239,68,68,.18);color:#ef4444}
+    .sev-med{background:rgba(245,158,11,.18);color:#f59e0b}
+    .sev-low{background:rgba(59,130,246,.18);color:#60a5fa}
     .timeline{display:flex;flex-direction:column;gap:12px}
     .timeline-item{padding:14px}
     .timeline-item h4{margin:0 0 6px;font-size:15px}
@@ -1192,6 +1207,7 @@
         <button class="tab-btn ${activePatientTab==='followup'?'active':''}" data-tab="followup">Follow-up</button>
         <button class="tab-btn ${activePatientTab==='broadcast'?'active':''}" data-tab="broadcast">WhatsApp</button>
         <button class="tab-btn ${activePatientTab==='referral'?'active':''}" data-tab="referral">Referral</button>
+        <button class="tab-btn ${activePatientTab==='bodymap'?'active':''}" data-tab="bodymap">🫀 Body Map</button>
       </div>
 
       <div class="tab-pane ${activePatientTab==='overview'?'active':''}" data-pane="overview">
@@ -1283,7 +1299,80 @@
           </div>
         </div>
       </div>
-    `;
+    
+      <div class="tab-pane ${activePatientTab==='bodymap'?'active':''}" data-pane="bodymap">
+        <div id="bodyMapContainer" style="display:flex;gap:16px;min-height:420px">
+
+          <!-- LEFT: SVG Body -->
+          <div style="flex:0 0 220px;display:flex;flex-direction:column;align-items:center;gap:10px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+              <button class="btn small bm-view-btn active" data-view="front">Front</button>
+              <button class="btn small bm-view-btn" data-view="back">Back</button>
+              <button class="btn small bm-view-btn" data-view="systems">Systems</button>
+            </div>
+            <div style="position:relative;width:160px;height:340px">
+              <svg id="bodySVG" viewBox="0 0 160 340" width="160" height="340" style="display:block;animation:bodyEntrance 1s cubic-bezier(.16,1,.3,1) both">
+                <!-- Scan line -->
+                <rect id="scanLine" x="0" y="0" width="160" height="3" rx="1" fill="rgba(79,210,255,0.55)" style="animation:scanAnim 2.4s ease-in-out infinite"/>
+                <!-- Head -->
+                <ellipse cx="80" cy="28" rx="22" ry="26" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+                <!-- Neck -->
+                <rect x="72" y="52" width="16" height="14" rx="4" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+                <!-- Torso -->
+                <rect x="42" y="66" width="76" height="96" rx="10" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+                <!-- Arms -->
+                <rect x="18" y="68" width="22" height="74" rx="10" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+                <rect x="120" y="68" width="22" height="74" rx="10" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+                <!-- Pelvis -->
+                <ellipse cx="80" cy="170" rx="34" ry="14" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+                <!-- Legs -->
+                <rect x="46" y="182" width="26" height="100" rx="10" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+                <rect x="88" y="182" width="26" height="100" rx="10" fill="none" stroke="var(--line)" stroke-width="1.2"/>
+                <!-- Feet -->
+                <ellipse cx="59" cy="285" rx="13" ry="7" fill="none" stroke="var(--line)" stroke-width="1.1"/>
+                <ellipse cx="101" cy="285" rx="13" ry="7" fill="none" stroke="var(--line)" stroke-width="1.1"/>
+
+                <!-- ORGANS (clickable, colored by severity) -->
+                <!-- Brain -->
+                <ellipse id="org-brain" class="body-organ" cx="80" cy="22" rx="16" ry="14" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.5" data-organ="Brain"/>
+                <!-- Thyroid -->
+                <ellipse id="org-thyroid" class="body-organ" cx="80" cy="57" rx="8" ry="5" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.5" data-organ="Thyroid"/>
+                <!-- Heart -->
+                <ellipse id="org-heart" class="body-organ" cx="68" cy="94" rx="12" ry="11" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.5" data-organ="Heart"/>
+                <!-- Lungs -->
+                <ellipse id="org-lungs-l" class="body-organ" cx="58" cy="105" rx="10" ry="17" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.5" data-organ="Lungs"/>
+                <ellipse id="org-lungs-r" class="body-organ" cx="102" cy="105" rx="10" ry="17" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.5" data-organ="Lungs"/>
+                <!-- Liver -->
+                <ellipse id="org-liver" class="body-organ" cx="96" cy="126" rx="14" ry="10" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.5" data-organ="Liver"/>
+                <!-- Pancreas -->
+                <ellipse id="org-pancreas" class="body-organ" cx="76" cy="135" rx="12" ry="7" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.5" data-organ="Pancreas"/>
+                <!-- Kidneys -->
+                <ellipse id="org-kidney-l" class="body-organ" cx="58" cy="148" rx="8" ry="11" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.5" data-organ="Kidneys"/>
+                <ellipse id="org-kidney-r" class="body-organ" cx="102" cy="148" rx="8" ry="11" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.5" data-organ="Kidneys"/>
+                <!-- Arteries -->
+                <line id="org-arteries" class="body-organ" x1="80" y1="70" x2="80" y2="165" stroke="rgba(100,100,100,0.3)" stroke-width="3" stroke-dasharray="4,3" data-organ="Arteries"/>
+                <!-- Eyes -->
+                <ellipse id="org-eye-l" class="body-organ" cx="70" cy="22" rx="5" ry="4" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.2" data-organ="Eyes"/>
+                <ellipse id="org-eye-r" class="body-organ" cx="90" cy="22" rx="5" ry="4" fill="rgba(100,100,100,0.15)" stroke="rgba(100,100,100,0.3)" stroke-width="1.2" data-organ="Eyes"/>
+                <!-- Feet/Bones -->
+                <ellipse id="org-feet" class="body-organ" cx="80" cy="285" rx="20" ry="7" fill="rgba(100,100,100,0.1)" stroke="rgba(100,100,100,0.25)" stroke-width="1.2" data-organ="Feet"/>
+                <ellipse id="org-bones" class="body-organ" cx="80" cy="200" rx="18" ry="30" fill="rgba(100,100,100,0.05)" stroke="rgba(100,100,100,0.15)" stroke-width="1" data-organ="Bones"/>
+              </svg>
+            </div>
+            <!-- Legend -->
+            <div style="display:flex;gap:8px;font-size:11px;color:var(--muted)">
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block"></span>High</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block"></span>Med</span>
+              <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:50%;background:#3b82f6;display:inline-block"></span>Low</span>
+            </div>
+          </div>
+
+          <!-- RIGHT: Organ Detail Cards -->
+          <div id="organCards" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px">
+            <div style="color:var(--muted);font-size:13px;padding:12px 0">Click an organ to view details, or scroll to see all affected systems.</div>
+          </div>
+        </div>
+      </div>`;
 
     $$('.tab-btn', $('#patientDetailWrap')).forEach(btn => btn.addEventListener('click', ()=>{
       activePatientTab = btn.dataset.tab;
@@ -1735,6 +1824,150 @@
 
   renderAll();
 })();
+
+  // ── BODY MAP ──────────────────────────────────────────────────────────────
+  const ORGAN_MAP = {
+    'Diabetes':     [{organ:'Pancreas',sev:'high',note:'Primary site — insulin production severely impaired.',impact:['Kidneys 72%','Eyes 58%','Heart 45%','Nerves 40%']},
+                     {organ:'Kidneys',sev:'med',note:'Diabetic nephropathy risk — monitor eGFR quarterly.',impact:['Blood pressure 65%','Fluid balance 50%']},
+                     {organ:'Eyes',sev:'med',note:'Diabetic retinopathy — annual fundoscopy recommended.',impact:['Vision 60%','Optic nerve 30%']},
+                     {organ:'Heart',sev:'low',note:'Elevated cardiovascular risk — lipid panel advised.',impact:['Arteries 40%','Blood pressure 35%']},
+                     {organ:'Feet',sev:'low',note:'Peripheral neuropathy risk — monthly foot check.',impact:['Circulation 50%','Nerves 45%']}],
+    'Hypertension': [{organ:'Heart',sev:'high',note:'Left ventricular hypertrophy risk — ECG recommended.',impact:['Arteries 80%','Kidneys 55%']},
+                     {organ:'Brain',sev:'high',note:'Stroke risk elevated — BP control critical.',impact:['Cognition 60%','Motor 45%']},
+                     {organ:'Kidneys',sev:'med',note:'Hypertensive nephropathy — eGFR monitoring needed.',impact:['Fluid 55%','Electrolytes 40%']},
+                     {organ:'Arteries',sev:'med',note:'Arterial stiffness progressing — vascular review.',impact:['Heart 60%','Brain 55%']},
+                     {organ:'Eyes',sev:'low',note:'Hypertensive retinopathy possible — eye check advised.',impact:['Vision 35%']}],
+    'CKD':          [{organ:'Kidneys',sev:'high',note:'Stage monitoring critical — nephrology referral due.',impact:['Blood 70%','Bones 55%','Heart 50%']},
+                     {organ:'Heart',sev:'high',note:'CKD-related cardiomyopathy — echo recommended.',impact:['Arteries 65%','Fluid 60%']},
+                     {organ:'Bones',sev:'med',note:'Renal osteodystrophy — calcium/phosphate panel needed.',impact:['Fracture risk 55%']},
+                     {organ:'Blood',sev:'med',note:'Anaemia of chronic kidney disease — check Hb.',impact:['Fatigue 70%','Heart load 50%']}],
+    'Cardiac':      [{organ:'Heart',sev:'high',note:'Primary condition — ejection fraction monitoring essential.',impact:['Lungs 75%','Kidneys 55%','Brain 45%']},
+                     {organ:'Lungs',sev:'med',note:'Pulmonary oedema risk — dyspnoea assessment needed.',impact:['O2 saturation 60%','Exercise 55%']},
+                     {organ:'Brain',sev:'med',note:'Embolic stroke risk — anticoagulation review.',impact:['Cognition 45%']},
+                     {organ:'Kidneys',sev:'low',note:'Cardiorenal syndrome possible — creatinine trend.',impact:['Fluid 40%']}],
+    'Thyroid':      [{organ:'Thyroid',sev:'high',note:'Primary site — TSH, T3, T4 panel required.',impact:['Heart 65%','Brain 55%','Bones 40%']},
+                     {organ:'Heart',sev:'med',note:'Thyroid-driven arrhythmia risk — cardiac review.',impact:['Rate 60%','Rhythm 55%']},
+                     {organ:'Bones',sev:'low',note:'Hyperthyroid bone loss — DEXA if prolonged.',impact:['Density 40%']},
+                     {organ:'Brain',sev:'low',note:'Cognitive fog, mood changes common — neuropsych screen.',impact:['Memory 35%','Mood 40%']}],
+    'Asthma':       [{organ:'Lungs',sev:'high',note:'Primary site — peak flow and spirometry required.',impact:['Airways 85%','O2 60%']},
+                     {organ:'Airways',sev:'med',note:'Airway remodelling risk — inhaler technique review.',impact:['Lung function 65%']},
+                     {organ:'Heart',sev:'low',note:'Hypoxia-related strain — pulse oximetry monitoring.',impact:['Rate 35%']}],
+    'General':      [{organ:'Heart',sev:'low',note:'Routine cardiovascular health — annual check advised.',impact:['All systems 20%']},
+                     {organ:'Lungs',sev:'low',note:'Respiratory health — good.',impact:['O2 saturation 15%']}]
+  };
+
+  const SEV_COLORS = {high:'#ef4444', med:'#f59e0b', low:'#3b82f6'};
+  const ORGAN_IDS  = {
+    'Brain':['org-brain'],'Heart':['org-heart'],'Lungs':['org-lungs-l','org-lungs-r'],
+    'Kidneys':['org-kidney-l','org-kidney-r'],'Pancreas':['org-pancreas'],
+    'Thyroid':['org-thyroid'],'Eyes':['org-eye-l','org-eye-r'],
+    'Arteries':['org-arteries'],'Feet':['org-feet'],'Bones':['org-bones'],
+    'Liver':['org-liver'],'Airways':['org-lungs-l','org-lungs-r']
+  };
+
+  function initBodyMap(condition) {
+    const container = document.getElementById('bodyMapContainer');
+    if (!container) return;
+
+    const organData = ORGAN_MAP[condition] || ORGAN_MAP['General'];
+    const organCards = document.getElementById('organCards');
+    const bodySVG    = document.getElementById('bodySVG');
+    if (!bodySVG) return;
+
+    // Reset all organs to neutral
+    bodySVG.querySelectorAll('.body-organ').forEach(el => {
+      el.style.fill   = 'rgba(100,100,100,0.15)';
+      el.style.stroke = 'rgba(100,100,100,0.3)';
+      el.style.animation = '';
+    });
+
+    // Colour organs by severity
+    organData.forEach(({organ, sev}) => {
+      const ids = ORGAN_IDS[organ] || [];
+      const col = SEV_COLORS[sev] || '#6b7280';
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.fill      = col.replace(')', ',0.25)').replace('rgb','rgba').replace('#','rgba(').replace('rgba(','rgba(').replace('a(','a(');
+        el.style.fill      = hexToRgba(col, 0.22);
+        el.style.stroke    = col;
+        el.style.strokeWidth = '2';
+        el.style.animation = 'organPulse 2.5s ease-in-out infinite';
+      });
+    });
+
+    // Render all organ cards
+    renderOrganCards(organData, organCards);
+
+    // Click organ → highlight card
+    bodySVG.querySelectorAll('.body-organ').forEach(el => {
+      el.addEventListener('click', () => {
+        const name = el.dataset.organ;
+        const found = organData.find(o => o.organ === name);
+        if (found) {
+          renderOrganCards([found], organCards, true);
+        }
+      });
+    });
+
+    // View toggle
+    document.querySelectorAll('.bm-view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.bm-view-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // For prototype: back/systems just re-renders same data with label
+        renderOrganCards(organData, organCards);
+      });
+    });
+  }
+
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function renderOrganCards(data, container, single=false) {
+    container.innerHTML = data.map((item, i) => `
+      <div class="organ-card" style="animation-delay:${i*0.06}s">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <strong style="font-size:14px">${item.organ}</strong>
+          <span class="severity-badge sev-${item.sev}">${item.sev.toUpperCase()}</span>
+        </div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">${item.note}</p>
+        ${item.impact.map(imp => {
+          const [label, pct] = imp.split(' ');
+          const num = parseInt(pct);
+          const col = num>=70?'#ef4444':num>=45?'#f59e0b':'#3b82f6';
+          return `<div class="impact-bar-wrap">
+            <span style="min-width:80px">${label}</span>
+            <div class="impact-bar"><div class="impact-bar-fill" style="width:${num}%;background:${col}"></div></div>
+            <span>${pct}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    `).join('') + (single ? `<button class="btn small" style="margin-top:4px" onclick="initBodyMap('${data[0]?.__condition||''}')">← All organs</button>` : '') +
+    `<div class="organ-card" style="animation-delay:${data.length*0.06}s;border-color:rgba(79,140,255,.25);background:rgba(79,140,255,.06)">
+      <strong style="font-size:13px">📋 Recommended Next Steps</strong>
+      <ul style="margin-top:8px;padding-left:16px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px">
+        ${data.filter(d=>d.sev==='high').map(d=>`<li>Urgent review: ${d.organ}</li>`).join('')}
+        ${data.filter(d=>d.sev==='med').map(d=>`<li>Monitor closely: ${d.organ}</li>`).join('')}
+        <li>Schedule follow-up within ${data.some(d=>d.sev==='high')?'2 weeks':'4–6 weeks'}</li>
+      </ul>
+    </div>`;
+  }
+
+  // Hook into tab click to init body map
+  document.addEventListener('click', function(e) {
+    if (e.target.dataset && e.target.dataset.tab === 'bodymap') {
+      setTimeout(() => {
+        const p = state.patients.find(pt => pt.id === state.activePatient);
+        if (p) initBodyMap(p.condition || 'General');
+      }, 50);
+    }
+  });
+  // ── END BODY MAP ───────────────────────────────────────────────────────────
 </script>
 </body>
 </html>
