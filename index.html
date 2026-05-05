@@ -1379,7 +1379,7 @@
       renderPatients();
       if (btn.dataset.tab === 'bodymap') {
         const pt = state.patients.find(x => x.id === state.activePatient);
-        if (pt) initBodyMap(pt.condition || 'General');
+        if (pt) { window._bmBack = function(){ initBodyMap(pt.condition||'General'); }; initBodyMap(pt.condition || 'General'); }
       }
     }));
 
@@ -1987,7 +1987,7 @@
         '<li>📅 Follow-up within ' + timeframe + '</li>' +
       '</ul></div>';
 
-    var backBtn = single ? '<button class="btn small" style="margin-bottom:8px" onclick="(function(){var pt=state.patients.find(function(x){return x.id===state.activePatient});if(pt)initBodyMap(pt.condition||'General');})()">← All organs</button>' : '';
+    var backBtn = single ? '<button class="btn small" style="margin-bottom:8px" onclick="window._bmBack&&window._bmBack()">← All organs</button>' : '';
 
     container.innerHTML = backBtn + cards + nextSteps;
   }
