@@ -1377,6 +1377,10 @@
     $$('.tab-btn', $('#patientDetailWrap')).forEach(btn => btn.addEventListener('click', ()=>{
       activePatientTab = btn.dataset.tab;
       renderPatients();
+      if (btn.dataset.tab === 'bodymap') {
+        const pt = state.patients.find(x => x.id === state.activePatient);
+        if (pt) initBodyMap(pt.condition || 'General');
+      }
     }));
 
     const addVisitBtn = $('#addVisitBtn');
@@ -1888,8 +1892,7 @@
       ids.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-        el.style.fill      = col.replace(')', ',0.25)').replace('rgb','rgba').replace('#','rgba(').replace('rgba(','rgba(').replace('a(','a(');
-        el.style.fill      = hexToRgba(col, 0.22);
+        el.style.fill = hexToRgba(col, 0.22);
         el.style.stroke    = col;
         el.style.strokeWidth = '2';
         el.style.animation = 'organPulse 2.5s ease-in-out infinite';
@@ -1958,15 +1961,6 @@
     </div>`;
   }
 
-  // Hook into tab click to init body map
-  document.addEventListener('click', function(e) {
-    if (e.target.dataset && e.target.dataset.tab === 'bodymap') {
-      setTimeout(() => {
-        const p = state.patients.find(pt => pt.id === state.activePatient);
-        if (p) initBodyMap(p.condition || 'General');
-      }, 50);
-    }
-  });
   // ── END BODY MAP ───────────────────────────────────────────────────────────
 </script>
 </body>
