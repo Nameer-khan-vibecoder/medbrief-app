@@ -1346,6 +1346,11 @@
         </div>
       </div>`;
 
+    if (activePatientTab === 'bodymap' && state.activePatient) {
+      var _bmp = state.patients.find(function(x){ return x.id === state.activePatient; });
+      if (_bmp) requestAnimationFrame(function(){ initBodyMap(_bmp.condition || 'General'); });
+    }
+
     $$('.tab-btn', $('#patientDetailWrap')).forEach(btn => btn.addEventListener('click', ()=>{
       activePatientTab = btn.dataset.tab;
       renderPatients();
