@@ -1154,10 +1154,12 @@
 
     $$('.patient-row').forEach(row => row.addEventListener('click', ()=>{
       selectedPatientId = row.dataset.patient;
+      state.activePatient = selectedPatientId;
       renderPatients();
       renderReferrals();
     }));
 
+    state.activePatient = selectedPatientId;
     const p = state.patients.find(x => x.id === selectedPatientId);
     if (!p) {
       $('#patientDetailWrap').innerHTML = `<div class="empty">Select a patient to continue.</div>`;
@@ -1794,18 +1796,6 @@
   $('#referralUrgency').addEventListener('change', generateReferralPreview);
   $('#referralNote').addEventListener('input', generateReferralPreview);
 
-  window.MedBrief = {
-    openPatient(id){
-      selectedPatientId = id;
-      renderPage('patients');
-      renderPatients();
-      renderReferrals();
-    }
-  };
-
-  renderAll();
-})();
-
   // ── BODY MAP ────────────────────────────────────────────────────────────────
   var ORGAN_MAP = {
     'Diabetes':     [
@@ -1974,7 +1964,7 @@
         '<li style="color:var(--muted)">Schedule follow-up within ' + timeframe + '</li>' +
       '</ul></div>';
 
-    container.innerHTML = html;
+    document.getElementById('organCards').innerHTML = html;
 
     // Wire back button
     var backBtn = document.getElementById('bmBackBtn');
@@ -1986,6 +1976,21 @@
     }
   }
   // ── END BODY MAP ────────────────────────────────────────────────────────────
+
+  window.MedBrief = {
+    openPatient(id){
+      selectedPatientId = id;
+      state.activePatient = id;
+      renderPage('patients');
+      renderPatients();
+      renderReferrals();
+    }
+  };
+
+  renderAll();
+})();
+
+
 </script>
 </body>
 </html>
